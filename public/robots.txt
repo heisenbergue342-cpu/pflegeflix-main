@@ -1,0 +1,33 @@
+# Pflegeflix - Robots.txt
+User-agent: *
+Allow: /
+
+# Disallow authenticated pages
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /saved
+Disallow: /saved-searches
+Disallow: /applications
+Disallow: /privacy-settings
+Disallow: /employer
+Disallow: /employer/*
+Disallow: /admin
+Disallow: /admin/*
+
+# Allow public pages
+Allow: /
+Allow: /search
+Allow: /job/
+Allow: /impressum
+Allow: /privacy
+Allow: /datenschutz
+Allow: /bewerber-datenschutz
+Allow: /agb
+Allow: /avv
+Allow: /dpa
+Allow: /cookie-policy
+Allow: /privacy-center
+Allow: /accessibility-statement
+
+# Sitemap
+Sitemap: https://pflegeflix.lovable.app/sitemap.xml

@@ -1,0 +1,213 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Netflix dark theme with accessible contrast ratios - WCAG 2.2 AA compliant */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 9.5%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Primary red with WCAG AA contrast (4.5:1) against dark bg */
+    --primary: 0 100% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 20%;
+    /* Muted text with enhanced contrast - WCAG AA: 7:1 ratio on dark bg */
+    --muted-foreground: 0 0% 78%;
+
+    --accent: 0 100% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 100% 58%;
+
+    --radius: 0.25rem;
+
+    --netflix-bg: 0 0% 8%;
+    --netflix-card: 0 0% 9.5%;
+    /* Accessible red with 4.5:1 contrast ratio on dark backgrounds */
+    --netflix-red: 0 100% 58%;
+    --netflix-red-dark: 0 100% 50%;
+    --netflix-text: 0 0% 100%;
+    /* Enhanced text contrast - WCAG AA: 7:1 ratio */
+    --netflix-text-muted: 0 0% 78%;
+    
+    /* Focus outline color for accessibility - WCAG 2.2 AA compliant */
+    --focus-outline: 0 100% 58%;
+  }
+
+  /* High contrast mode - for users who need even better contrast */
+  @media (prefers-contrast: high) {
+    :root {
+      --background: 0 0% 0%;
+      --foreground: 0 0% 100%;
+      --muted-foreground: 0 0% 90%;
+      --netflix-text-muted: 0 0% 90%;
+      --border: 0 0% 40%;
+      --input: 0 0% 40%;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-display: swap;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* WCAG 2.2 AA Focus Indicators - minimum 2px outline, high contrast */
+  *:focus-visible {
+    outline: 2px solid hsl(var(--focus-outline));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Ensure focus is visible for all interactive elements */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [tabindex="0"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="checkbox"]:focus-visible,
+  [role="radio"]:focus-visible,
+  [role="switch"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="option"]:focus-visible {
+    outline: 2px solid hsl(var(--focus-outline));
+    outline-offset: 2px;
+  }
+
+  /* Enhanced keyboard navigation indicators */
+  [data-keyboard-navigation="true"] *:focus {
+    outline: 2px solid hsl(var(--focus-outline));
+    outline-offset: 2px;
+  }
+
+  /* Skip to main content link for screen readers - WCAG 2.2 */
+  .skip-to-main {
+    position: absolute;
+    left: -9999px;
+    z-index: 999;
+    padding: 1rem 2rem;
+    background-color: hsl(var(--netflix-red));
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .skip-to-main:focus {
+    left: 1rem;
+    top: 1rem;
+    outline: 3px solid white;
+    outline-offset: 2px;
+  }
+
+  /* Ensure sufficient color contrast for text - WCAG AA compliant */
+  .text-muted {
+    color: hsl(0 0% 78%); /* 7:1 contrast on dark bg */
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Reduced motion support for accessibility - WCAG 2.2 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* High contrast mode support - WCAG 2.2 */
+  @media (prefers-contrast: high) {
+    * {
+      border-color: currentColor;
+    }
+    
+    button,
+    a {
+      outline: 2px solid currentColor;
+    }
+
+    /* Enhanced focus in high contrast */
+    *:focus-visible {
+      outline-width: 3px;
+      outline-color: currentColor;
+    }
+  }
+
+  /* Minimum touch target size - WCAG 2.2 AA: 24x24px */
+  button,
+  a,
+  [role="button"],
+  [role="link"] {
+    min-height: 24px;
+    min-width: 24px;
+  }
+
+  /* Ensure interactive elements have adequate spacing */
+  button + button,
+  a + a {
+    margin-left: 0.25rem;
+  }
+}
