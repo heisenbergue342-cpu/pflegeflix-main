@@ -220,6 +220,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'job.toast.activated': 'Job aktiviert',
     'job.toast.deleted': 'Job gelöscht',
     'job.new': 'Neu',
+    'job.apply': 'Jetzt bewerben',
+    
+    // Application
+    'application.cover_letter': 'Bewerbungsschreiben (optional)',
+    'application.success': 'Bewerbung erfolgreich eingereicht!',
     
     // Carousels
     'carousel.recommended': 'Empfohlen',
@@ -502,6 +507,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'job.toast.activated': 'Job activated',
     'job.toast.deleted': 'Job deleted',
     'job.new': 'New',
+    'job.apply': 'Apply now',
+    
+    // Application
+    'application.cover_letter': 'Cover letter (optional)',
+    'application.success': 'Application submitted successfully!',
     
     // Carousels
     'carousel.recommended': 'Recommended',
