@@ -69,7 +69,7 @@ export default function JobDetails() {
 
   const toggleSave = async () => {
     if (!user) {
-      toast.error('Please login to save jobs');
+      toast.error(t('auth.login_required.message'));
       navigate('/auth');
       return;
     }
@@ -81,19 +81,19 @@ export default function JobDetails() {
         .eq('user_id', user.id)
         .eq('job_id', id);
       setIsSaved(false);
-      toast.success('Job removed from saved');
+      toast.success(t('favorites.removed'));
     } else {
       await supabase
         .from('saved_jobs')
         .insert({ user_id: user.id, job_id: id });
       setIsSaved(true);
-      toast.success('Job saved');
+      toast.success(t('favorites.saved'));
     }
   };
 
   const handleApply = async () => {
     if (!user) {
-      toast.error('Please login to apply');
+      toast.error(t('auth.login_required.message'));
       navigate('/auth');
       return;
     }
@@ -120,7 +120,7 @@ export default function JobDetails() {
   if (loading) {
     return (
       <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-white text-xl">{t('common.loading')}</div>
       </div>
     );
   }
@@ -129,8 +129,8 @@ export default function JobDetails() {
     return (
       <div className="min-h-screen bg-netflix-bg">
         <SEO 
-          title="Job nicht gefunden | PflegeFlix"
-          description="Die gesuchte Stellenanzeige konnte nicht gefunden werden."
+          title={t('error.job_not_found_seo_title')}
+          description={t('error.job_not_found_description')}
           canonical="/404"
         />
         
@@ -138,13 +138,12 @@ export default function JobDetails() {
           <Card className="bg-netflix-card border-netflix-card">
             <CardContent className="p-8 text-center">
               <div className="mb-6">
-                <Briefcase className="w-16 h-16 text-netflix-red mx-auto mb-4" />
+                <Briefcase className="w-16 h-16 text-netflix-red mx-auto mb-4" aria-hidden="true" />
                 <h1 className="text-3xl font-bold text-white mb-3">
-                  {t('error.job_not_found') || 'Job nicht gefunden'}
+                  {t('error.job_not_found')}
                 </h1>
                 <p className="text-netflix-text-muted text-lg">
-                  {t('error.job_not_found_description') || 
-                   'Die von Ihnen gesuchte Stellenanzeige existiert nicht oder wurde entfernt.'}
+                  {t('error.job_not_found_description')}
                 </p>
               </div>
               
@@ -154,13 +153,13 @@ export default function JobDetails() {
                   variant="outline"
                   className="border-white/20 text-white hover:bg-white/10"
                 >
-                  {t('navigation.go_back') || 'Zurück'}
+                  {t('navigation.go_back')}
                 </Button>
                 <Button
                   onClick={() => navigate('/search')}
                   className="bg-netflix-red hover:bg-netflix-red-dark text-white"
                 >
-                  {t('navigation.to_search') || 'Zur Jobsuche'}
+                  {t('navigation.to_search')}
                 </Button>
               </div>
             </CardContent>
@@ -174,7 +173,7 @@ export default function JobDetails() {
     <div className="min-h-screen bg-netflix-bg">
       <SEO 
         title={`${job.title} in ${job.city}, ${job.state}`}
-        description={`${job.title} bei ${job.facility_type || 'Pflegeeinrichtung'} in ${job.city}. ${job.contract_type} | ${job.salary_min && job.salary_max ? `€${job.salary_min}-${job.salary_max}${job.salary_unit}` : 'Wettbewerbsfähiges Gehalt'}. ${job.description?.substring(0, 100) || 'Jetzt online bewerben und Teil unseres Teams werden!'}`}
+        description={`${job.title} ${t('job.at_facility')} ${job.facility_type || t('job.default_facility')} ${t('search.location')} ${job.city}. ${job.contract_type} | ${job.salary_min && job.salary_max ? `€${job.salary_min}-${job.salary_max}${job.salary_unit}` : t('job.competitive_salary')}. ${job.description?.substring(0, 100) || t('job.apply_now_description')}`}
         canonical={`/job/${id}`}
         ogType="article"
       />
@@ -182,8 +181,8 @@ export default function JobDetails() {
       <JobPostingStructuredData job={job} />
       <BreadcrumbStructuredData 
         items={[
-          { name: 'Startseite', url: window.location.origin },
-          { name: 'Stellenangebote', url: `${window.location.origin}/search` },
+          { name: t('nav.home'), url: window.location.origin },
+          { name: t('nav.search'), url: `${window.location.origin}/search` },
           { name: job.facility_type, url: `${window.location.origin}/search?facilities=${job.facility_type}` },
           { name: `${job.city}, ${job.state}`, url: `${window.location.origin}/search?cities=${job.city}` },
           { name: job.title, url: window.location.href }
@@ -198,7 +197,7 @@ export default function JobDetails() {
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">{job.title}</h1>
                 <div className="flex items-center gap-2 text-netflix-text-muted">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4" aria-hidden="true" />
                   {job.city}, {job.state}
                 </div>
               </div>
@@ -207,7 +206,7 @@ export default function JobDetails() {
                 variant="outline"
                 size="icon"
                 className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white"
-                aria-label={isSaved ? "Job aus gespeicherten entfernen" : "Job speichern"}
+                aria-label={isSaved ? t('job.remove_from_saved') : t('job.save_job')}
                 aria-pressed={isSaved}
               >
                 <Heart className={isSaved ? 'fill-current' : ''} aria-hidden="true" />
@@ -216,25 +215,25 @@ export default function JobDetails() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="flex items-center gap-2 text-white">
-                <Euro className="w-5 h-5 text-netflix-red" />
+                <Euro className="w-5 h-5 text-netflix-red" aria-hidden="true" />
                 <div>
-                  <div className="text-sm text-netflix-text-muted">Salary</div>
+                  <div className="text-sm text-netflix-text-muted">{t('job.salary_label')}</div>
                   <div className="font-semibold">
                     {job.salary_min}-{job.salary_max} {job.salary_unit}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-white">
-                <Briefcase className="w-5 h-5 text-netflix-red" />
+                <Briefcase className="w-5 h-5 text-netflix-red" aria-hidden="true" />
                 <div>
-                  <div className="text-sm text-netflix-text-muted">Contract</div>
+                  <div className="text-sm text-netflix-text-muted">{t('job.contract_label')}</div>
                   <div className="font-semibold">{job.contract_type}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-white">
-                <Clock className="w-5 h-5 text-netflix-red" />
+                <Clock className="w-5 h-5 text-netflix-red" aria-hidden="true" />
                 <div>
-                  <div className="text-sm text-netflix-text-muted">Shift</div>
+                  <div className="text-sm text-netflix-text-muted">{t('job.shift_label')}</div>
                   <div className="font-semibold">{job.shift_type}</div>
                 </div>
               </div>
@@ -250,13 +249,13 @@ export default function JobDetails() {
 
             <div className="space-y-6 mb-8">
               <div>
-                <h2 className="text-xl font-bold text-white mb-3">Description</h2>
+                <h2 className="text-xl font-bold text-white mb-3">{t('job.description_heading')}</h2>
                 <p className="text-netflix-text-muted">{job.description}</p>
               </div>
 
               {job.requirements && job.requirements.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-3">Requirements</h2>
+                  <h2 className="text-xl font-bold text-white mb-3">{t('job.requirements_heading')}</h2>
                   <ul className="list-disc list-inside space-y-2 text-netflix-text-muted">
                     {job.requirements.map((req: string, idx: number) => (
                       <li key={idx}>{req}</li>
@@ -267,26 +266,27 @@ export default function JobDetails() {
 
               {job.bonus && (
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-3">Bonus</h2>
+                  <h2 className="text-xl font-bold text-white mb-3">{t('job.bonus_heading')}</h2>
                   <p className="text-netflix-text-muted">{job.bonus}</p>
                 </div>
               )}
             </div>
 
             <div className="space-y-4 border-t border-netflix-card pt-6">
-              <h2 className="text-xl font-bold text-white">Apply for this position</h2>
+              <h2 className="text-xl font-bold text-white">{t('job.apply_for_position')}</h2>
               <Textarea
                 placeholder={t('application.cover_letter')}
                 value={coverLetter}
                 onChange={(e) => setCoverLetter(e.target.value)}
                 className="bg-netflix-bg border-netflix-card text-white min-h-[120px]"
+                aria-label={t('application.cover_letter')}
               />
               <Button
                 onClick={handleApply}
                 disabled={applying}
                 className="w-full bg-netflix-red hover:bg-netflix-red-dark text-white"
               >
-                {applying ? 'Submitting...' : t('job.apply')}
+                {applying ? t('application.submitting') : t('job.apply')}
               </Button>
             </div>
           </CardContent>

@@ -18,10 +18,12 @@ import { toast } from '@/hooks/use-toast';
 import JobCard from '@/components/JobCard';
 import EmptyState from '@/components/EmptyState';
 import SEO from '@/components/SEO';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function CandidateDashboard() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -95,8 +97,8 @@ export default function CandidateDashboard() {
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast({
-        title: 'Fehler beim Laden',
-        description: 'Dashboard-Daten konnten nicht geladen werden.',
+        title: t('error.load_failed'),
+        description: t('dashboard.load_data_error'),
         variant: 'destructive',
       });
     } finally {
@@ -123,14 +125,14 @@ export default function CandidateDashboard() {
       if (error) throw error;
       
       toast({
-        title: 'Profil gespeichert',
-        description: 'Ihre Änderungen wurden erfolgreich gespeichert.',
+        title: t('dashboard.profile_saved'),
+        description: t('dashboard.profile_saved_description'),
       });
     } catch (error) {
       console.error('Error saving profile:', error);
       toast({
-        title: 'Fehler beim Speichern',
-        description: 'Profil konnte nicht gespeichert werden.',
+        title: t('error.save_failed'),
+        description: t('dashboard.profile_save_error'),
         variant: 'destructive',
       });
     } finally {
@@ -157,11 +159,11 @@ export default function CandidateDashboard() {
 
   const getApplicationStatusBadge = (status: string, stage: string) => {
     const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      submitted: { label: 'Eingereicht', variant: 'outline' },
-      viewed: { label: 'Angesehen', variant: 'secondary' },
-      interview: { label: 'Vorstellungsgespräch', variant: 'default' },
-      offer: { label: 'Angebot', variant: 'default' },
-      rejected: { label: 'Abgelehnt', variant: 'destructive' },
+      submitted: { label: t('dashboard.stage.submitted'), variant: 'outline' },
+      viewed: { label: t('dashboard.stage.viewed'), variant: 'secondary' },
+      interview: { label: t('dashboard.stage.interview'), variant: 'default' },
+      offer: { label: t('dashboard.stage.offer'), variant: 'default' },
+      rejected: { label: t('dashboard.stage.rejected'), variant: 'destructive' },
     };
     
     const config = statusConfig[stage] || statusConfig[status] || { label: status, variant: 'outline' };
@@ -184,8 +186,8 @@ export default function CandidateDashboard() {
   return (
     <div className="min-h-screen bg-background pt-20 pb-8">
       <SEO 
-        title="Mein Dashboard"
-        description="Verwalte dein Bewerberprofil, gespeicherte Jobs und Bewerbungen bei Pflegeflix."
+        title={t('menu.dashboard')}
+        description={t('dashboard.manage_profile_applications')}
         canonical="/dashboard"
         noindex={true}
       />
@@ -193,16 +195,16 @@ export default function CandidateDashboard() {
       <div className="container max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Willkommen, {profileData.name || 'Benutzer'}!</h1>
-          <p className="text-muted-foreground">Verwalten Sie Ihr Profil und Ihre Bewerbungen</p>
+          <h1 className="text-3xl font-bold mb-2">{t('dashboard.welcome')}, {profileData.name || t('dashboard.user')}!</h1>
+          <p className="text-muted-foreground">{t('dashboard.manage_profile_applications')}</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="cursor-pointer hover:border-primary transition" onClick={() => setActiveTab('saved')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gespeicherte Jobs</CardTitle>
-              <Heart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">{t('dashboard.saved_jobs')}</CardTitle>
+              <Heart className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.savedJobs}</div>
@@ -211,8 +213,8 @@ export default function CandidateDashboard() {
           
           <Card className="cursor-pointer hover:border-primary transition" onClick={() => setActiveTab('applications')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Bewerbungen</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">{t('dashboard.applications')}</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.applications}</div>
@@ -221,12 +223,12 @@ export default function CandidateDashboard() {
           
           <Card className="opacity-50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gespeicherte Suchen</CardTitle>
-              <Settings className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">{t('dashboard.saved_searches')}</CardTitle>
+              <Settings className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.savedSearches}</div>
-              <Badge variant="outline" className="mt-1 text-xs">Bald verfügbar</Badge>
+              <Badge variant="outline" className="mt-1 text-xs">{t('dashboard.coming_soon')}</Badge>
             </CardContent>
           </Card>
         </div>
@@ -234,10 +236,10 @@ export default function CandidateDashboard() {
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-4">
-            <TabsTrigger value="overview">Übersicht</TabsTrigger>
-            <TabsTrigger value="profile">Profil</TabsTrigger>
-            <TabsTrigger value="saved">Gespeichert</TabsTrigger>
-            <TabsTrigger value="applications">Bewerbungen</TabsTrigger>
+            <TabsTrigger value="overview">{t('dashboard.overview')}</TabsTrigger>
+            <TabsTrigger value="profile">{t('dashboard.profile')}</TabsTrigger>
+            <TabsTrigger value="saved">{t('dashboard.saved_jobs')}</TabsTrigger>
+            <TabsTrigger value="applications">{t('dashboard.applications')}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -246,13 +248,13 @@ export default function CandidateDashboard() {
               {/* Recent Applications */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Neueste Bewerbungen</CardTitle>
-                  <CardDescription>Ihre letzten 5 Bewerbungen</CardDescription>
+                  <CardTitle>{t('dashboard.recent_applications')}</CardTitle>
+                  <CardDescription>{t('dashboard.last_5_applications')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {applications.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      Keine Bewerbungen vorhanden
+                      {t('dashboard.no_applications_yet')}
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -275,46 +277,46 @@ export default function CandidateDashboard() {
               {/* Profile Summary */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Profil-Übersicht</CardTitle>
-                  <CardDescription>Ihre Profildaten</CardDescription>
+                  <CardTitle>{t('dashboard.profile_summary')}</CardTitle>
+                  <CardDescription>{t('dashboard.profile_data')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-muted-foreground" />
+                    <User className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Name</p>
-                      <p className="font-medium">{profileData.name || 'Nicht angegeben'}</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.name')}</p>
+                      <p className="font-medium">{profileData.name || t('dashboard.not_specified')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-muted-foreground" />
+                    <Mail className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                     <div>
-                      <p className="text-sm text-muted-foreground">E-Mail</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.email')}</p>
                       <p className="font-medium">{profileData.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-muted-foreground" />
+                    <MapPin className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Standort</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.location')}</p>
                       <p className="font-medium">
                         {profileData.city && profileData.state 
                           ? `${profileData.city}, ${profileData.state}` 
-                          : 'Nicht angegeben'}
+                          : t('dashboard.not_specified')}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Briefcase className="w-5 h-5 text-muted-foreground" />
+                    <Briefcase className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Fähigkeiten</p>
+                      <p className="text-sm text-muted-foreground">{t('dashboard.skills')}</p>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {profileData.skills.length > 0 ? (
                           profileData.skills.slice(0, 3).map(skill => (
                             <Badge key={skill} variant="secondary">{skill}</Badge>
                           ))
                         ) : (
-                          <span className="text-sm text-muted-foreground">Keine angegeben</span>
+                          <span className="text-sm text-muted-foreground">{t('dashboard.no_skills_specified')}</span>
                         )}
                         {profileData.skills.length > 3 && (
                           <Badge variant="outline">+{profileData.skills.length - 3}</Badge>
@@ -327,8 +329,8 @@ export default function CandidateDashboard() {
                     className="w-full mt-4"
                     onClick={() => setActiveTab('profile')}
                   >
-                    <Edit2 className="w-4 h-4 mr-2" />
-                    Profil bearbeiten
+                    <Edit2 className="w-4 h-4 mr-2" aria-hidden="true" />
+                    {t('dashboard.edit_profile')}
                   </Button>
                 </CardContent>
               </Card>
@@ -339,13 +341,13 @@ export default function CandidateDashboard() {
           <TabsContent value="profile">
             <Card>
               <CardHeader>
-                <CardTitle>Profil bearbeiten</CardTitle>
-                <CardDescription>Aktualisieren Sie Ihre persönlichen Informationen und Fähigkeiten</CardDescription>
+                <CardTitle>{t('dashboard.edit_profile_title')}</CardTitle>
+                <CardDescription>{t('dashboard.update_profile_info')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name *</Label>
+                    <Label htmlFor="name">{t('dashboard.name')} *</Label>
                     <Input
                       id="name"
                       value={profileData.name}
@@ -355,7 +357,7 @@ export default function CandidateDashboard() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email">E-Mail *</Label>
+                    <Label htmlFor="email">{t('dashboard.email')} *</Label>
                     <Input
                       id="email"
                       type="email"
@@ -363,11 +365,11 @@ export default function CandidateDashboard() {
                       disabled
                       className="bg-muted"
                     />
-                    <p className="text-xs text-muted-foreground">E-Mail kann nicht geändert werden</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.email_cannot_be_changed')}</p>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="city">Stadt</Label>
+                    <Label htmlFor="city">{t('dashboard.city')}</Label>
                     <Input
                       id="city"
                       value={profileData.city}
@@ -377,7 +379,7 @@ export default function CandidateDashboard() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="state">Bundesland</Label>
+                    <Label htmlFor="state">{t('dashboard.state')}</Label>
                     <Input
                       id="state"
                       value={profileData.state}
@@ -388,15 +390,15 @@ export default function CandidateDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Fähigkeiten</Label>
+                  <Label>{t('dashboard.skills')}</Label>
                   <div className="flex gap-2">
                     <Input
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                      placeholder="z.B. Intensivpflege, Wundmanagement"
+                      placeholder={t('dashboard.add_skill_placeholder')}
                     />
-                    <Button type="button" onClick={addSkill}>Hinzufügen</Button>
+                    <Button type="button" onClick={addSkill}>{t('dashboard.add')}</Button>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {profileData.skills.map(skill => (
@@ -405,6 +407,7 @@ export default function CandidateDashboard() {
                         <button
                           onClick={() => removeSkill(skill)}
                           className="hover:text-destructive"
+                          aria-label={t('common.remove_item', { item: skill })}
                         >
                           ×
                         </button>
@@ -415,12 +418,12 @@ export default function CandidateDashboard() {
 
                 <div className="flex gap-3 pt-4">
                   <Button onClick={handleSaveProfile} disabled={saving}>
-                    <Save className="w-4 h-4 mr-2" />
-                    {saving ? 'Wird gespeichert...' : 'Änderungen speichern'}
+                    <Save className="w-4 h-4 mr-2" aria-hidden="true" />
+                    {saving ? t('dashboard.saving') : t('dashboard.save_changes')}
                   </Button>
                   <Button variant="outline" onClick={() => navigate('/privacy-settings')}>
-                    <Settings className="w-4 h-4 mr-2" />
-                    Datenschutzeinstellungen
+                    <Settings className="w-4 h-4 mr-2" aria-hidden="true" />
+                    {t('dashboard.privacy_settings')}
                   </Button>
                 </div>
               </CardContent>
@@ -431,17 +434,17 @@ export default function CandidateDashboard() {
           <TabsContent value="saved">
             <Card>
               <CardHeader>
-                <CardTitle>Gespeicherte Jobs ({stats.savedJobs})</CardTitle>
-                <CardDescription>Jobs, die Sie für später gespeichert haben</CardDescription>
+                <CardTitle>{t('dashboard.saved_jobs')} ({stats.savedJobs})</CardTitle>
+                <CardDescription>{t('dashboard.jobs_for_later')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {savedJobs.length === 0 ? (
                   <EmptyState
                     icon={Heart}
-                    title="Keine gespeicherten Jobs"
-                    description="Sie haben noch keine Jobs gespeichert. Durchsuchen Sie Stellenangebote und speichern Sie interessante Jobs."
+                    title={t('dashboard.no_saved_jobs')}
+                    description={t('dashboard.no_saved_jobs_description')}
                     action={{
-                      label: "Jobs durchsuchen",
+                      label: t('dashboard.browse_jobs'),
                       onClick: () => navigate('/search')
                     }}
                   />
@@ -458,17 +461,17 @@ export default function CandidateDashboard() {
           <TabsContent value="applications">
             <Card>
               <CardHeader>
-                <CardTitle>Meine Bewerbungen ({stats.applications})</CardTitle>
-                <CardDescription>Übersicht über alle Ihre Bewerbungen</CardDescription>
+                <CardTitle>{t('dashboard.applications')} ({stats.applications})</CardTitle>
+                <CardDescription>{t('dashboard.all_applications_overview')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {applications.length === 0 ? (
                   <EmptyState
                     icon={FileText}
-                    title="Keine Bewerbungen"
-                    description="Sie haben sich noch nicht auf Jobs beworben. Finden Sie passende Stellen und bewerben Sie sich noch heute!"
+                    title={t('dashboard.no_applications')}
+                    description={t('dashboard.no_applications_description')}
                     action={{
-                      label: "Jobs durchsuchen",
+                      label: t('dashboard.browse_jobs'),
                       onClick: () => navigate('/search')
                     }}
                   />
@@ -480,12 +483,12 @@ export default function CandidateDashboard() {
                           <div className="flex-1">
                             <h4 className="font-semibold text-lg">{app.jobs?.title}</h4>
                             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                              <MapPin className="w-3 h-3" />
+                              <MapPin className="w-3 h-3" aria-hidden="true" />
                               {app.jobs?.city}, {app.jobs?.state}
                             </p>
                             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                              <Calendar className="w-3 h-3" />
-                              Beworben: {new Date(app.created_at).toLocaleDateString('de-DE')}
+                              <Calendar className="w-3 h-3" aria-hidden="true" />
+                              {t('dashboard.applied_on')}: {new Date(app.created_at).toLocaleDateString('de-DE')}
                             </p>
                           </div>
                           <div className="text-right">
@@ -494,7 +497,7 @@ export default function CandidateDashboard() {
                         </div>
                         {app.cover_letter && (
                           <div className="mt-3 pt-3 border-t">
-                            <p className="text-sm text-muted-foreground font-medium mb-1">Anschreiben:</p>
+                            <p className="text-sm text-muted-foreground font-medium mb-1">{t('dashboard.cover_letter_short')}:</p>
                             <p className="text-sm line-clamp-2">{app.cover_letter}</p>
                           </div>
                         )}

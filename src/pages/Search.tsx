@@ -205,16 +205,16 @@ export default function Search() {
     if (searchQuery) parts.push(searchQuery);
     if (filters.cities.length > 0) parts.push(filters.cities.join(', '));
     if (filters.specialties.length > 0) parts.push(filters.specialties.join(', '));
-    return parts.length > 0 ? `${parts.join(' - ')} Jobs finden` : 'Pflegejobs suchen';
-  }, [searchQuery, filters]);
+    return parts.length > 0 ? `${parts.join(' - ')} ${t('search.jobs_find')}` : t('search.title');
+  }, [searchQuery, filters, t]);
 
   const seoDescription = useMemo(() => {
-    let desc = 'Durchsuche aktuelle Pflegestellen';
-    if (filters.cities.length > 0) desc += ` in ${filters.cities.join(', ')}`;
-    if (filters.specialties.length > 0) desc += ` für ${filters.specialties.join(', ')}`;
-    desc += '. Finde deinen Traumjob in der Pflege bei Pflegeflix.';
+    let desc = t('search.description_base');
+    if (filters.cities.length > 0) desc += ` ${t('search.location')} ${filters.cities.join(', ')}`;
+    if (filters.specialties.length > 0) desc += ` ${t('job.field.specialties')} ${filters.specialties.join(', ')}`;
+    desc += `. ${t('hero.subtitle')}`;
     return desc;
-  }, [filters]);
+  }, [filters, t]);
 
   return (
     <div className="min-h-screen bg-netflix-bg">
@@ -225,8 +225,8 @@ export default function Search() {
       />
       <BreadcrumbStructuredData 
         items={[
-          { name: 'Startseite', url: window.location.origin },
-          { name: 'Stellenangebote', url: window.location.href }
+          { name: t('nav.home'), url: window.location.origin },
+          { name: t('nav.search'), url: window.location.href }
         ]} 
       />
       
@@ -235,7 +235,7 @@ export default function Search() {
         <div className="mb-6 flex gap-3">
           {/* Search input */}
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-netflix-text-muted" />
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-netflix-text-muted" aria-hidden="true" />
             <Input
               ref={searchInputRef}
               type="search"
@@ -253,7 +253,7 @@ export default function Search() {
             variant="outline"
             onClick={handleOpenFilter}
             className="flex items-center gap-2 bg-secondary border-border hover:bg-secondary/80"
-            aria-label={`Filter ${activeFilterCount > 0 ? `(${activeFilterCount} aktive Filter)` : ''}`}
+            aria-label={`${t('search.filters')} ${activeFilterCount > 0 ? `(${activeFilterCount} ${t('search.active_filters')})` : ''}`}
           >
             <Filter className="w-4 h-4" aria-hidden="true" />
             {t('search.filters')}
@@ -272,7 +272,7 @@ export default function Search() {
               className="flex items-center gap-2"
               aria-label={t('saved_searches.save_current')}
             >
-              <Bookmark className="w-4 h-4" />
+              <Bookmark className="w-4 h-4" aria-hidden="true" />
               <span className="hidden sm:inline">{t('saved_searches.save_current')}</span>
             </Button>
           )}
@@ -284,74 +284,75 @@ export default function Search() {
             {filters.cities.map(city => (
               <Badge key={city} variant="secondary" className="gap-1 pr-1">
                 {city}
-                <button onClick={() => removeFilter('cities', city)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5">
-                  <X className="w-3 h-3" />
+                <button onClick={() => removeFilter('cities', city)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_city', { city })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
             ))}
             {filters.facilities.map(f => (
               <Badge key={f} variant="secondary" className="gap-1 pr-1">
                 {f}
-                <button onClick={() => removeFilter('facilities', f)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5">
-                  <X className="w-3 h-3" />
+                <button onClick={() => removeFilter('facilities', f)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: f })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
             ))}
             {filters.contracts.map(c => (
               <Badge key={c} variant="secondary" className="gap-1 pr-1">
                 {c}
-                <button onClick={() => removeFilter('contracts', c)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5">
-                  <X className="w-3 h-3" />
+                <button onClick={() => removeFilter('contracts', c)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: c })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
             ))}
             {filters.specialties.map(s => (
               <Badge key={s} variant="secondary" className="gap-1 pr-1">
                 {s}
-                <button onClick={() => removeFilter('specialties', s)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5">
-                  <X className="w-3 h-3" />
+                <button onClick={() => removeFilter('specialties', s)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: s })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
             ))}
             {filters.shiftTypes.map(st => (
               <Badge key={st} variant="secondary" className="gap-1 pr-1">
                 {st}
-                <button onClick={() => removeFilter('shiftTypes', st)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5">
-                  <X className="w-3 h-3" />
+                <button onClick={() => removeFilter('shiftTypes', st)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: st })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
             ))}
             {filters.salaryMin && (
               <Badge variant="secondary" className="gap-1 pr-1">
-                Min: {filters.salaryMin}€
-                <button onClick={() => removeFilter('salaryMin')} className="ml-1 hover:bg-primary/20 rounded-full p-0.5">
-                  <X className="w-3 h-3" />
+                {t('search.min_salary', { value: filters.salaryMin })}
+                <button onClick={() => removeFilter('salaryMin')} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: t('search.min_salary_label') })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
             )}
             {filters.salaryMax && (
               <Badge variant="secondary" className="gap-1 pr-1">
-                Max: {filters.salaryMax}€
-                <button onClick={() => removeFilter('salaryMax')} className="ml-1 hover:bg-primary/20 rounded-full p-0.5">
-                  <X className="w-3 h-3" />
+                {t('search.max_salary', { value: filters.salaryMax })}
+                <button onClick={() => removeFilter('salaryMax')} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: t('search.max_salary_label') })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
+                </button>
+              </Badge>
+            )}
+            {filters.posted && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {t(`search.posted_options.${filters.posted}`)}
+                <button onClick={() => removeFilter('posted')} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: t('search.posted_label') })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
             )}
           </div>
         )}
 
-        <FullScreenFilterSheet
-          open={isFilterOpen}
-          onOpenChange={handleCloseFilter}
-          filters={filters}
-          onApplyFilters={handleApplyFilters}
-        />
-
         <div 
           ref={mainContentRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           role="region"
-          aria-label="Suchergebnisse"
+          aria-label={t('search.results_region_label')}
         >
           {jobs.map((job) => (
             <JobCard key={job.id} job={job} />
@@ -362,14 +363,14 @@ export default function Search() {
           <div className="max-w-2xl mx-auto mt-12">
             <EmptyState
               icon={FileSearch}
-              title={activeFilterCount > 0 ? "Keine Jobs gefunden" : "Noch keine Jobs verfügbar"}
+              title={activeFilterCount > 0 ? t('search.no_jobs_found') : t('search.no_jobs_available')}
               description={
                 activeFilterCount > 0
-                  ? "Keine Jobs passen zu Ihren aktuellen Filtern. Versuchen Sie, die Filter anzupassen oder später noch einmal zu schauen."
-                  : "Derzeit sind keine Stellenangebote verfügbar. Schauen Sie bald wieder vorbei oder lassen Sie sich benachrichtigen."
+                  ? t('search.no_jobs_found_description')
+                  : t('search.no_jobs_available_description')
               }
               action={{
-                label: activeFilterCount > 0 ? "Filter zurücksetzen" : "Zur Startseite",
+                label: activeFilterCount > 0 ? t('search.reset_filters') : t('menu.home'),
                 onClick: () => {
                   if (activeFilterCount > 0) {
                     setFilters({

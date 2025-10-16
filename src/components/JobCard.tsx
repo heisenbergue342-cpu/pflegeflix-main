@@ -74,7 +74,7 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
     <Link 
       to={`/job/${job.id}`} 
       className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 rounded-md inline-block"
-      aria-label={`View details for ${job.title} in ${job.city}, ${job.state}`}
+      aria-label={t('job.view_details_for', { title: job.title, city: job.city, state: job.state })}
     >
       <div 
         className="relative bg-netflix-card rounded-md overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-netflix-red/20 min-w-[280px]"
@@ -90,7 +90,7 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
             size="icon"
             variant="ghost"
             onClick={toggleSave}
-            aria-label={!user ? t('auth.login_required.save_hint') : isSaved ? `Remove ${job.title} from saved jobs` : `Save ${job.title} to your saved jobs`}
+            aria-label={!user ? t('auth.login_required.save_hint') : isSaved ? t('job.remove_from_saved', { title: job.title }) : t('job.save_job', { title: job.title })}
             aria-pressed={isSaved}
             className={`rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 ${!user ? 'cursor-pointer' : ''}`}
           >
@@ -100,7 +100,7 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
 
         <div className="absolute bottom-0 left-0 right-0 p-4 z-20 space-y-2">
           {daysAgo <= 3 && (
-            <Badge className="bg-netflix-red text-white border-0" aria-label={daysAgo === 0 ? 'New job' : `Posted ${daysAgo} days ago`}>
+            <Badge className="bg-netflix-red text-white border-0" aria-label={daysAgo === 0 ? t('job.new') : t('job.posted_days_ago', { days: daysAgo.toString() })}>
               {daysAgo === 0 ? t('job.new') : t('job.days_ago').replace('{days}', daysAgo.toString())}
             </Badge>
           )}
@@ -112,7 +112,7 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
             <span>{job.city}, {job.state}</span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5" role="list" aria-label="Job tags">
+          <div className="flex flex-wrap gap-1.5" role="list" aria-label={t('job.tags_label')}>
             {job.tags?.map((tag: string) => (
               <Badge key={tag} variant="outline" className="bg-white/10 text-white border-white/20" role="listitem">
                 {tag}
@@ -120,15 +120,15 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
             ))}
           </div>
 
-          <div className="text-netflix-red font-bold text-lg" aria-label={`Salary range: ${job.salary_min && job.salary_max ? `${job.salary_min.toLocaleString()} to ${job.salary_max.toLocaleString()} ${job.salary_unit}` : 'By agreement'}`}>
+          <div className="text-netflix-red font-bold text-lg" aria-label={t('job.salary_range_label', { salary_min: job.salary_min?.toLocaleString(), salary_max: job.salary_max?.toLocaleString(), salary_unit: job.salary_unit })}>
             {job.salary_min && job.salary_max ? (
               `${job.salary_min.toLocaleString()}-${job.salary_max.toLocaleString()} ${job.salary_unit}`
             ) : (
-              'Nach Vereinbarung'
+              t('job.by_agreement')
             )}
           </div>
 
-          <div className="text-sm text-gray-400" aria-label={`Contract: ${job.contract_type}, Shift: ${job.shift_type}`}>
+          <div className="text-sm text-gray-400" aria-label={t('job.contract_shift_label', { contract_type: job.contract_type, shift_type: job.shift_type })}>
             {job.contract_type} • {job.shift_type}
           </div>
         </div>

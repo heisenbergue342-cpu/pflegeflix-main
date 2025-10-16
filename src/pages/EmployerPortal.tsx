@@ -36,7 +36,7 @@ export default function EmployerPortal() {
   if (loading || checkingAuth) {
     return (
       <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
-        <div className="text-netflix-text text-xl">Loading...</div>
+        <div className="text-netflix-text text-xl">{t('common.loading')}</div>
       </div>
     );
   }
@@ -74,8 +74,8 @@ export default function EmployerPortal() {
               asChild
               className="flex-shrink-0 data-[state=active]:bg-netflix-red data-[state=active]:text-white"
             >
-              <Link to="/employer" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3">
-                <Briefcase className="w-4 h-4" />
+              <Link to="/employer" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3" aria-label={t('employer.my_jobs')}>
+                <Briefcase className="w-4 h-4" aria-hidden="true" />
                 <span className="text-xs sm:text-sm whitespace-nowrap">{t("employer.my_jobs")}</span>
               </Link>
             </TabsTrigger>
@@ -84,8 +84,8 @@ export default function EmployerPortal() {
               asChild
               className="flex-shrink-0 data-[state=active]:bg-netflix-red data-[state=active]:text-white"
             >
-              <Link to="/employer/post" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3">
-                <FileText className="w-4 h-4" />
+              <Link to="/employer/post" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3" aria-label={t('employer.post_job')}>
+                <FileText className="w-4 h-4" aria-hidden="true" />
                 <span className="text-xs sm:text-sm whitespace-nowrap">{t("employer.post_job")}</span>
               </Link>
             </TabsTrigger>
@@ -94,8 +94,8 @@ export default function EmployerPortal() {
               asChild
               className="flex-shrink-0 data-[state=active]:bg-netflix-red data-[state=active]:text-white"
             >
-              <Link to="/employer/applicants" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3">
-                <Users className="w-4 h-4" />
+              <Link to="/employer/applicants" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3" aria-label={t('employer.applicants')}>
+                <Users className="w-4 h-4" aria-hidden="true" />
                 <span className="text-xs sm:text-sm whitespace-nowrap">{t("employer.applicants")}</span>
               </Link>
             </TabsTrigger>
@@ -104,8 +104,8 @@ export default function EmployerPortal() {
               asChild
               className="flex-shrink-0 data-[state=active]:bg-netflix-red data-[state=active]:text-white"
             >
-              <Link to="/employer/settings" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3">
-                <Settings className="w-4 h-4" />
+              <Link to="/employer/settings" className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3" aria-label={t('employer.settings')}>
+                <Settings className="w-4 h-4" aria-hidden="true" />
                 <span className="text-xs sm:text-sm whitespace-nowrap">{t("employer.settings")}</span>
               </Link>
             </TabsTrigger>

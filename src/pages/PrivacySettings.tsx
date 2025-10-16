@@ -12,10 +12,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Shield, Download, Eye, Trash2, Sparkles, Mail } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SEO from '@/components/SEO';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function PrivacySettings() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [retentionDays, setRetentionDays] = useState(730);
   const [autoDeleteEnabled, setAutoDeleteEnabled] = useState(false);
@@ -109,10 +111,10 @@ export default function PrivacySettings() {
 
       if (recError) throw recError;
 
-      toast({ title: 'Einstellungen gespeichert' });
+      toast({ title: t('privacy_settings.toast.save_success') });
     } catch (error) {
       console.error('Save error:', error);
-      toast({ title: 'Fehler beim Speichern', variant: 'destructive' });
+      toast({ title: t('privacy_settings.toast.save_error'), variant: 'destructive' });
     }
   };
 
@@ -147,7 +149,7 @@ export default function PrivacySettings() {
     a.download = `meine-daten-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
 
-    toast({ title: 'Daten exportiert' });
+    toast({ title: t('privacy_settings.toast.export_success') });
   };
 
   const getStatusBadge = (status: string) => {
@@ -158,10 +160,10 @@ export default function PrivacySettings() {
       cancelled: 'bg-red-500/20 text-red-400',
     };
     const labels: Record<string, string> = {
-      pending: 'Ausstehend',
-      processing: 'In Bearbeitung',
-      completed: 'Abgeschlossen',
-      cancelled: 'Abgebrochen',
+      pending: t('privacy_settings.status_pending'),
+      processing: t('privacy_settings.status_processing'),
+      completed: t('privacy_settings.status_completed'),
+      cancelled: t('privacy_settings.status_cancelled'),
     };
     return (
       <span className={`px-2 py-1 rounded text-xs ${styles[status]}`}>
@@ -172,9 +174,9 @@ export default function PrivacySettings() {
 
   const getRequestTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      applications: 'Bewerbungen',
-      messages: 'Nachrichten',
-      full_account: 'Komplettes Konto',
+      applications: t('privacy_settings.request_type_applications'),
+      messages: t('privacy_settings.request_type_messages'),
+      full_account: t('privacy_settings.request_type_full_account'),
     };
     return labels[type] || type;
   };
@@ -182,19 +184,19 @@ export default function PrivacySettings() {
   return (
     <div className="min-h-screen bg-netflix-bg">
       <SEO
-        title="Datenschutz & DSGVO Einstellungen"
-        description="Verwalten Sie Ihre Datenschutzeinstellungen und DSGVO-Rechte."
+        title={t('privacy_settings.title')}
+        description={t('privacy_settings.subtitle')}
         canonical="/privacy-settings"
         noindex={true}
       />
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-center gap-3 mb-8">
-          <Shield className="h-8 w-8 text-primary" />
+          <Shield className="h-8 w-8 text-primary" aria-hidden="true" />
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Datenschutz & DSGVO</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t('privacy_settings.title')}</h1>
             <p className="text-muted-foreground">
-              Verwalten Sie Ihre Daten und Privatsphäre-Einstellungen
+              {t('privacy_settings.subtitle')}
             </p>
           </div>
         </div>
@@ -203,14 +205,14 @@ export default function PrivacySettings() {
           {/* Recommendation Settings */}
           <Card className="bg-card border-border p-6">
             <div className="flex items-start gap-4">
-              <Sparkles className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <Sparkles className="h-6 w-6 text-primary flex-shrink-0 mt-1" aria-hidden="true" />
               <div className="flex-1 space-y-4">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Jobempfehlungen
+                    {t('privacy_settings.recommendations_title')}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Steuern Sie, wie wir Ihnen personalisierte Jobs vorschlagen.
+                    {t('privacy_settings.recommendations_description')}
                   </p>
                 </div>
 
@@ -218,10 +220,10 @@ export default function PrivacySettings() {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="rec-enabled" className="text-foreground">
-                        Empfehlungen aktivieren
+                        {t('privacy_settings.enable_recommendations')}
                       </Label>
                       <p className="text-xs text-muted-foreground">
-                        Personalisierte Jobs basierend auf Ihrem Profil anzeigen
+                        {t('privacy_settings.show_personalized_jobs')}
                       </p>
                     </div>
                     <Switch
@@ -230,6 +232,7 @@ export default function PrivacySettings() {
                       onCheckedChange={(checked) =>
                         setRecommendations({ ...recommendations, enabled: checked })
                       }
+                      aria-label={t('privacy_settings.enable_recommendations')}
                     />
                   </div>
 
@@ -239,13 +242,13 @@ export default function PrivacySettings() {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <Mail className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                           <div>
                             <Label htmlFor="email-rec" className="text-foreground">
-                              E-Mail Benachrichtigungen
+                              {t('privacy_settings.email_notifications')}
                             </Label>
                             <p className="text-xs text-muted-foreground">
-                              Neue passende Jobs per E-Mail erhalten
+                              {t('privacy_settings.receive_new_jobs_email')}
                             </p>
                           </div>
                         </div>
@@ -255,13 +258,14 @@ export default function PrivacySettings() {
                           onCheckedChange={(checked) =>
                             setRecommendations({ ...recommendations, email: checked })
                           }
+                          aria-label={t('privacy_settings.email_notifications')}
                         />
                       </div>
 
                       {recommendations.email && (
                         <div>
                           <Label htmlFor="frequency" className="text-foreground mb-2 block">
-                            E-Mail-Häufigkeit
+                            {t('privacy_settings.email_frequency')}
                           </Label>
                           <Select
                             value={recommendations.frequency}
@@ -273,10 +277,10 @@ export default function PrivacySettings() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="daily">Täglich</SelectItem>
-                              <SelectItem value="weekly">Wöchentlich</SelectItem>
-                              <SelectItem value="biweekly">Alle 2 Wochen</SelectItem>
-                              <SelectItem value="monthly">Monatlich</SelectItem>
+                              <SelectItem value="daily">{t('privacy_settings.daily')}</SelectItem>
+                              <SelectItem value="weekly">{t('privacy_settings.weekly')}</SelectItem>
+                              <SelectItem value="biweekly">{t('privacy_settings.biweekly')}</SelectItem>
+                              <SelectItem value="monthly">{t('privacy_settings.monthly')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -291,21 +295,21 @@ export default function PrivacySettings() {
           {/* Data Retention Settings */}
           <Card className="bg-card border-border p-6">
             <div className="flex items-start gap-4">
-              <Eye className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <Eye className="h-6 w-6 text-primary flex-shrink-0 mt-1" aria-hidden="true" />
               <div className="flex-1 space-y-4">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Datenaufbewahrung
+                    {t('privacy_settings.data_retention_title')}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Bestimmen Sie, wie lange Ihre Daten gespeichert werden sollen.
+                    {t('privacy_settings.data_retention_description')}
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="retention" className="text-foreground">
-                      Aufbewahrungsdauer (Tage)
+                      {t('privacy_settings.retention_days')}
                     </Label>
                     <Input
                       id="retention"
@@ -315,30 +319,32 @@ export default function PrivacySettings() {
                       min="30"
                       max="3650"
                       className="bg-input border-border mt-2"
+                      aria-label={t('privacy_settings.retention_days')}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Minimum 30 Tage, Maximum 10 Jahre (3650 Tage)
+                      {t('privacy_settings.retention_days_hint')}
                     </p>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="auto-delete" className="text-foreground">
-                        Automatische Löschung aktivieren
+                        {t('privacy_settings.enable_auto_delete')}
                       </Label>
                       <p className="text-xs text-muted-foreground">
-                        Daten werden nach Ablauf der Frist automatisch gelöscht
+                        {t('privacy_settings.auto_delete_description')}
                       </p>
                     </div>
                     <Switch
                       id="auto-delete"
                       checked={autoDeleteEnabled}
                       onCheckedChange={setAutoDeleteEnabled}
+                      aria-label={t('privacy_settings.enable_auto_delete')}
                     />
                   </div>
 
                   <Button onClick={handleSaveSettings} className="w-full">
-                    Einstellungen speichern
+                    {t('privacy_settings.save_settings')}
                   </Button>
                 </div>
               </div>
@@ -348,17 +354,17 @@ export default function PrivacySettings() {
           {/* Data Export */}
           <Card className="bg-card border-border p-6">
             <div className="flex items-start gap-4">
-              <Download className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <Download className="h-6 w-6 text-primary flex-shrink-0 mt-1" aria-hidden="true" />
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  Datenexport
+                  {t('privacy_settings.data_export_title')}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Laden Sie eine Kopie all Ihrer gespeicherten Daten herunter (DSGVO Art. 15).
+                  {t('privacy_settings.data_export_description')}
                 </p>
                 <Button onClick={exportData} variant="outline" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Meine Daten exportieren
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  {t('privacy_settings.export_my_data')}
                 </Button>
               </div>
             </div>
@@ -373,8 +379,8 @@ export default function PrivacySettings() {
               <Separator />
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Trash2 className="h-5 w-5" />
-                  Löschanträge
+                  <Trash2 className="h-5 w-5" aria-hidden="true" />
+                  {t('privacy_settings.deletion_requests_history_title')}
                 </h3>
                 <div className="space-y-3">
                   {deletionRequests.map((request) => (
@@ -388,7 +394,7 @@ export default function PrivacySettings() {
                             {getStatusBadge(request.status)}
                           </div>
                           <p className="text-sm text-muted-foreground">
-                            Eingereicht am{' '}
+                            {t('privacy_settings.submitted_on')}{' '}
                             {new Date(request.requested_at).toLocaleDateString()}
                           </p>
                           {request.notes && (
@@ -399,7 +405,7 @@ export default function PrivacySettings() {
                         </div>
                         {request.completed_at && (
                           <div className="text-sm text-muted-foreground">
-                            Abgeschlossen am{' '}
+                            {t('privacy_settings.completed_on')}{' '}
                             {new Date(request.completed_at).toLocaleDateString()}
                           </div>
                         )}

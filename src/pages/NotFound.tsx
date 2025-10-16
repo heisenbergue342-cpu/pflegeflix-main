@@ -14,7 +14,7 @@ const NotFound = () => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
 
-  const title = t('error.page_not_found') + ' – 404 | Pflegeflix';
+  const title = t('error.page_not_found_seo_title');
   const description = t('error.page_not_found_description');
 
   return (
@@ -51,8 +51,9 @@ const NotFound = () => {
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            aria-label={t('navigation.go_back')}
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             {t('navigation.go_back')}
           </button>
         </div>

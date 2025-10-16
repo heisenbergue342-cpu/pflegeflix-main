@@ -13,8 +13,8 @@ export default function Applications() {
   return (
     <div className="min-h-screen bg-netflix-bg">
       <SEO 
-        title="Meine Bewerbungen"
-        description="Verwalte deine Bewerbungen und behalte den Überblick über deinen Bewerbungsstatus bei Pflegeflix."
+        title={t('nav.applications')}
+        description={t('applications.description')}
         canonical="/applications"
         noindex={true}
       />
@@ -24,16 +24,17 @@ export default function Applications() {
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">{t('nav.applications')}</h1>
             <p className="text-netflix-text-muted">
-              Kommunizieren Sie mit Arbeitgebern und verfolgen Sie Ihren Bewerbungsstatus
+              {t('applications.subtitle')}
             </p>
           </div>
           <Button
             variant="outline"
             onClick={() => navigate('/privacy-settings')}
             className="gap-2"
+            aria-label={t('privacy_settings.title')}
           >
-            <Shield className="h-4 w-4" />
-            Datenschutz
+            <Shield className="h-4 w-4" aria-hidden="true" />
+            {t('privacy_settings.title_short')}
           </Button>
         </div>
 

@@ -84,11 +84,7 @@ export default function SavedSearches() {
         .eq('user_id', user?.id);
 
       if (!error) {
-        toast.success(
-          language === 'de' 
-            ? 'E-Mail-Benachrichtigungen wurden deaktiviert' 
-            : 'Email notifications have been disabled'
-        );
+        toast.success(t('saved_searches.unsubscribe_success'));
         // Remove the parameter from URL
         window.history.replaceState({}, '', '/saved-searches');
         fetchSavedSearches();
@@ -214,7 +210,7 @@ export default function SavedSearches() {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center">{t('loading')}</div>
+          <div className="text-center">{t('common.loading')}</div>
         </div>
       </div>
     );
@@ -224,9 +220,7 @@ export default function SavedSearches() {
     <div className="min-h-screen bg-background">
       <SEO
         title={t('saved_searches.title')}
-        description={language === 'de' 
-          ? 'Verwalten Sie Ihre gespeicherten Jobsuchen und E-Mail-Benachrichtigungen'
-          : 'Manage your saved job searches and email notifications'}
+        description={t('saved_searches.subtitle')}
       />
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -293,7 +287,7 @@ export default function SavedSearches() {
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                     <div className="flex-1 w-full sm:w-auto">
                       <Label htmlFor={`alert-${search.id}`} className="flex items-center gap-2 mb-2">
-                        <Bell className="h-4 w-4" />
+                        <Bell className="h-4 w-4" aria-hidden="true" />
                         {t('saved_searches.email_alerts')}
                       </Label>
                       <Select
@@ -311,9 +305,7 @@ export default function SavedSearches() {
                       </Select>
                       {search.email_alert !== 'none' && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          {language === 'de' 
-                            ? 'Sie können sich jederzeit über den Link in der E-Mail abmelden'
-                            : 'You can unsubscribe anytime via the link in the email'}
+                          {t('saved_searches.unsubscribe_hint')}
                         </p>
                       )}
                     </div>
@@ -322,7 +314,7 @@ export default function SavedSearches() {
                       className="w-full sm:w-auto"
                     >
                       {t('saved_searches.view_results')}
-                      <ExternalLink className="ml-2 h-4 w-4" />
+                      <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </CardContent>
@@ -371,7 +363,7 @@ export default function SavedSearches() {
               {t('privacy_center.delete_cancel')}
             </Button>
             <Button onClick={handleRename} disabled={!newName.trim()}>
-              {t('job.post.save_draft')}
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>

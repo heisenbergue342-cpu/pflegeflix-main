@@ -180,19 +180,19 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
             <button
               onClick={handleClose}
               className="p-2 hover:bg-[#1A1A1B] rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F10]"
-              aria-label="Filtermenü schließen"
+              aria-label={t('filter.close_menu')}
             >
               <X className="w-5 h-5" aria-hidden="true" />
             </button>
             <DialogTitle id="filter-sheet-title" className="text-xl font-bold absolute left-1/2 -translate-x-1/2">
-              Suche
+              {t('search.title')}
             </DialogTitle>
             <button
               onClick={handleReset}
               className="text-[#0080FF] hover:underline text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F10]"
-              aria-label="Alle Filter zurücksetzen"
+              aria-label={t('search.reset_all_filters')}
             >
-              Zurücksetzen
+              {t('search.reset_filters')}
             </button>
           </div>
         </DialogHeader>
@@ -202,19 +202,19 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto pb-20"
           role="region"
-          aria-label="Filteroptionen"
+          aria-label={t('search.filter_options')}
         >
           <div className="p-6 space-y-8">
             {/* Standort */}
             <section aria-labelledby="location-heading">
-              <h3 id="location-heading" className="text-lg font-bold mb-3">Standort</h3>
+              <h3 id="location-heading" className="text-lg font-bold mb-3">{t('search.location')}</h3>
               <div className="space-y-3">
                 <Input
-                  placeholder="Stadt suchen…"
+                  placeholder={t('search.search_cities')}
                   value={citySearch}
                   onChange={(e) => setCitySearch(e.target.value)}
                   className="bg-[#1A1A1B] border-[#2A2A2B] text-white placeholder:text-[#666]"
-                  aria-label="Stadt suchen"
+                  aria-label={t('search.search_cities')}
                 />
                 {localFilters.cities.length > 0 && (
                   <div className="flex flex-wrap gap-3">
@@ -240,13 +240,13 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
                     ))}
                   </div>
                 )}
-                <p className="text-xs text-[#666]">Wähle bis zu 3 Städte aus</p>
+                <p className="text-xs text-[#666]">{t('search.city_helper')}</p>
                 
                 {/* Radius */}
                 {localFilters.cities.length > 0 && (
                   <div className="pt-2">
                     <p className="text-sm mb-2 text-[#999]">
-                      Umkreis um {localFilters.cities[0]}
+                      {t('search.radius_around', { city: localFilters.cities[0] })}
                     </p>
                     <div className="flex flex-wrap gap-3">
                       {[10, 25, 50].map(km => (
@@ -265,12 +265,12 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
 
             {/* Einrichtung */}
             <section aria-labelledby="facility-heading">
-              <h3 id="facility-heading" className="text-lg font-bold mb-3">Einrichtung</h3>
+              <h3 id="facility-heading" className="text-lg font-bold mb-3">{t('job.field.facility_type')}</h3>
               <div className="flex flex-wrap gap-3">
-                {['Klinik/Krankenhaus', 'Altenheim', '1:1 Intensivpflege'].map(type => (
+                {['Klinik', 'Altenheim', '1zu1'].map(type => (
                   <PillChip
                     key={type}
-                    label={type}
+                    label={t(`category.${type.toLowerCase().replace('1zu1', 'intensive_care')}`)}
                     selected={localFilters.facilities.includes(type)}
                     onClick={() => toggleArrayFilter('facilities', type)}
                   />
@@ -280,12 +280,12 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
 
             {/* Vertragstyp */}
             <section aria-labelledby="contract-heading">
-              <h3 id="contract-heading" className="text-lg font-bold mb-3">Vertragstyp</h3>
+              <h3 id="contract-heading" className="text-lg font-bold mb-3">{t('job.field.contract_type')}</h3>
               <div className="flex flex-wrap gap-3">
                 {['Vollzeit', 'Teilzeit', 'Minijob'].map(type => (
                   <PillChip
                     key={type}
-                    label={type}
+                    label={t(`contract.${type}`)}
                     selected={localFilters.contracts.includes(type)}
                     onClick={() => toggleArrayFilter('contracts', type)}
                   />
@@ -295,12 +295,12 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
 
             {/* Veröffentlichung */}
             <section aria-labelledby="posted-heading">
-              <h3 id="posted-heading" className="text-lg font-bold mb-3">Veröffentlichung</h3>
+              <h3 id="posted-heading" className="text-lg font-bold mb-3">{t('search.posted_label')}</h3>
               <div className="flex flex-wrap gap-3">
                 {[
-                  { value: '24h', label: 'Letzte 24h' },
-                  { value: '7d', label: '7 Tage' },
-                  { value: '30d', label: '30 Tage' }
+                  { value: '24h', label: t('search.posted_options.24h') },
+                  { value: '7d', label: t('search.posted_options.7d') },
+                  { value: '30d', label: t('search.posted_options.30d') }
                 ].map(({ value, label }) => (
                   <PillChip
                     key={value}
@@ -314,12 +314,12 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
 
             {/* Schichttyp */}
             <section aria-labelledby="shift-heading">
-              <h3 id="shift-heading" className="text-lg font-bold mb-3">Schichttyp</h3>
+              <h3 id="shift-heading" className="text-lg font-bold mb-3">{t('job.field.shift_type')}</h3>
               <div className="flex flex-wrap gap-3">
                 {['Tagschicht', 'Nachtschicht', 'Wechselschicht', 'Bereitschaftsdienst'].map(type => (
                   <PillChip
                     key={type}
-                    label={type}
+                    label={t(`shift_type.${type.toLowerCase().replace(/\s/g, '_')}`)}
                     selected={localFilters.shiftTypes.includes(type)}
                     onClick={() => toggleArrayFilter('shiftTypes', type)}
                   />
@@ -329,11 +329,11 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
 
             {/* Gehalt */}
             <section aria-labelledby="salary-heading">
-              <h3 id="salary-heading" className="text-lg font-bold mb-3">Gehaltsspanne</h3>
+              <h3 id="salary-heading" className="text-lg font-bold mb-3">{t('salary_planner.estimation_title')}</h3>
               <div className="space-y-4">
                 <div>
                   <label htmlFor="salary-min" className="text-sm text-[#999] mb-2 block">
-                    Mindestgehalt: {localFilters.salaryMin ? `${localFilters.salaryMin}€/Monat` : 'Keine Angabe'}
+                    {t('search.min_salary_label')}: {localFilters.salaryMin ? `${localFilters.salaryMin}€/${t('job.field.month')}` : t('search.no_info')}
                   </label>
                   <Slider
                     id="salary-min"
@@ -343,12 +343,12 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
                     value={[localFilters.salaryMin || 1500]}
                     onValueChange={([value]) => setLocalFilters(prev => ({ ...prev, salaryMin: value === 1500 ? undefined : value }))}
                     className="w-full"
-                    aria-label="Mindestgehalt"
+                    aria-label={t('search.min_salary_label')}
                   />
                 </div>
                 <div>
                   <label htmlFor="salary-max" className="text-sm text-[#999] mb-2 block">
-                    Maximalgehalt: {localFilters.salaryMax ? `${localFilters.salaryMax}€/Monat` : 'Keine Angabe'}
+                    {t('search.max_salary_label')}: {localFilters.salaryMax ? `${localFilters.salaryMax}€/${t('job.field.month')}` : t('search.no_info')}
                   </label>
                   <Slider
                     id="salary-max"
@@ -358,7 +358,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
                     value={[localFilters.salaryMax || 6000]}
                     onValueChange={([value]) => setLocalFilters(prev => ({ ...prev, salaryMax: value === 6000 ? undefined : value }))}
                     className="w-full"
-                    aria-label="Maximalgehalt"
+                    aria-label={t('search.max_salary_label')}
                   />
                 </div>
               </div>
@@ -372,7 +372,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
               currentFilters={{
                 cities: localFilters.cities,
                 facilities: localFilters.facilities,
-                contracts: localFilters.contracts,
+                contracts: localFilters.filters.contracts,
                 posted: localFilters.posted
               }}
             />
@@ -414,10 +414,10 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
               handleApply();
             }
           }}
-          aria-label={`${jobCount} Ergebnisse anzeigen`}
+          aria-label={t('search.show_results', { count: jobCount })}
           aria-live="polite"
         >
-          {jobCount} Ergebnisse anzeigen
+          {t('search.show_results', { count: jobCount })}
         </button>
       </DialogContent>
     </Dialog>

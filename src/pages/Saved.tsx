@@ -29,8 +29,8 @@ export default function Saved() {
   return (
     <div className="min-h-screen bg-netflix-bg">
       <SEO 
-        title="Meine Favoriten"
-        description="Verwalte deine gespeicherten Pflegejobs. Behalte den Überblick über interessante Stellenangebote bei Pflegeflix."
+        title={t('favorites.title')}
+        description={t('favorites.description')}
         canonical="/saved"
         noindex={true}
       />
@@ -46,14 +46,14 @@ export default function Saved() {
           <div className="max-w-2xl mx-auto mt-12">
             <EmptyState
               icon={Bookmark}
-              title="Keine gespeicherten Jobs"
-              description="Sie haben noch keine Jobs gespeichert. Durchsuchen Sie verfügbare Stellenangebote und speichern Sie interessante Jobs für später."
+              title={t('favorites.empty_title')}
+              description={t('favorites.empty_description')}
               action={{
-                label: "Jobs durchsuchen",
+                label: t('favorites.browse_jobs'),
                 onClick: () => navigate('/search')
               }}
               secondaryAction={{
-                label: "Zur Startseite",
+                label: t('menu.home'),
                 onClick: () => navigate('/')
               }}
             />
