@@ -181,6 +181,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'saved_searches.search_name': 'Suchname',
     'saved_searches.search_name_placeholder': 'z. B. „Krankenpflege Berlin"',
     
+    // Favorites (Saved Jobs)
+    'favorites.title': 'Gespeicherte Jobs',
+    'favorites.removed': 'Job aus Favoriten entfernt',
+    'favorites.saved': 'Job gespeichert',
+
     // Footer
     'footer.company_info': 'Unternehmensangaben',
     'footer.legal': 'Rechtliches',
@@ -458,6 +463,11 @@ export const translations: Record<Language, Record<string, string>> = {
     'saved_searches.search_name': 'Search name',
     'saved_searches.search_name_placeholder': 'e.g., "Nursing jobs in Berlin"',
     
+    // Favorites (Saved Jobs)
+    'favorites.title': 'Saved Jobs',
+    'favorites.removed': 'Job removed from favorites',
+    'favorites.saved': 'Job saved',
+
     // Footer
     'footer.company_info': 'Company Information',
     'footer.legal': 'Legal',
