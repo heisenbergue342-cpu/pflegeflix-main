@@ -20,6 +20,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.applications': 'Bewerbungen',
     'nav.admin': 'Admin',
     'nav.employer': 'Arbeitgeber',
+    'nav.logout': 'Abmelden',
+    'nav.login': 'Anmelden',
     
     // Menu
     'menu.browse': 'Entdecken',
@@ -290,6 +292,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'nav.applications': 'Applications',
     'nav.admin': 'Admin',
     'nav.employer': 'Employer',
+    'nav.logout': 'Sign Out',
+    'nav.login': 'Sign In',
     
     // Menu
     'menu.browse': 'Browse',
