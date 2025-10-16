@@ -214,6 +214,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'job.toast.paused': 'Job pausiert',
     'job.toast.activated': 'Job aktiviert',
     'job.toast.deleted': 'Job gelöscht',
+    'job.new': 'Neu',
     
     // Carousels
     'carousel.recommended': 'Empfohlen',
@@ -486,6 +487,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'job.toast.paused': 'Job paused',
     'job.toast.activated': 'Job activated',
     'job.toast.deleted': 'Job deleted',
+    'job.new': 'New',
     
     // Carousels
     'carousel.recommended': 'Recommended',
