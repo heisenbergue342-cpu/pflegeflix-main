@@ -367,6 +367,24 @@ export const translations: Record<Language, Record<string, string>> = {
     'job.post.of': 'von',
     'job.post.publish': 'Job veröffentlichen',
     'job.apply_for_position': 'Für diese Position bewerben',
+    'job.at_facility': 'bei',
+    'job.default_facility': 'einer Einrichtung',
+    'job.competitive_salary': 'Wettbewerbsfähiges Gehalt',
+    'job.apply_now_description': 'Bewerben Sie sich jetzt auf diese Stelle.',
+    'job.remove_from_saved': 'Aus Favoriten entfernen',
+    'job.save_job': 'Job speichern',
+    'job.view_details_for': 'Details ansehen für {title} in {city}, {state}',
+    'job.posted_days_ago': 'Vor {days} Tagen veröffentlicht',
+    'job.tags_label': 'Tags',
+    'job.salary_range_label': 'Gehaltsspanne: {salary_min} bis {salary_max} {salary_unit}',
+    'job.by_agreement': 'Nach Vereinbarung',
+    'job.contract_shift_label': 'Vertragstyp: {contract_type}, Schichttyp: {shift_type}',
+    'job.salary_label': 'Gehalt',
+    'job.contract_label': 'Vertrag',
+    'job.shift_label': 'Schicht',
+    'job.description_heading': 'Jobbeschreibung',
+    'job.requirements_heading': 'Anforderungen',
+    'job.bonus_heading': 'Boni',
     
     // Application
     'application.cover_letter': 'Bewerbungsschreiben (optional)',
@@ -377,6 +395,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'application.message_sent_toast': 'Nachricht gesendet',
     'application.send_message': 'Nachricht senden',
     'application.error_sending_message': 'Fehler beim Senden',
+    'application.submitting': 'Wird gesendet...',
+    'applications.description': 'Verwalten Sie Ihre Bewerbungen und kommunizieren Sie mit Arbeitgebern.',
+    'applications.subtitle': 'Ihre Übersicht über alle Bewerbungen und Nachrichten',
+    'applications.title_short': 'Bewerbungen',
     
     // Carousels
     'carousel.recommended': 'Empfohlen',
@@ -443,6 +465,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'privacy_center.delete_cancel': 'Abbrechen',
     'cancel': 'Abbrechen',
     'common.download_pdf': 'Als PDF herunterladen',
+    'common.remove_item': '{item} entfernen',
     
     // Errors
     'error.unauthorized': 'Keine Berechtigung',
@@ -461,6 +484,12 @@ export const translations: Record<Language, Record<string, string>> = {
     'error.posting_limit_reached': 'Stellenanzeigen-Limit erreicht',
     'error.upgrade_subscription': 'Bitte upgraden Sie Ihr Abo, um weitere Jobs zu veröffentlichen.',
     'error.publish_failed': 'Veröffentlichung fehlgeschlagen',
+    'error.page_not_found_seo_title': 'Seite nicht gefunden - 404',
+    'dashboard.load_data_error': 'Fehler beim Laden der Dashboard-Daten.',
+    'dashboard.profile_saved': 'Profil gespeichert',
+    'dashboard.profile_saved_description': 'Ihre Profilinformationen wurden erfolgreich aktualisiert.',
+    'error.save_failed': 'Speichern fehlgeschlagen',
+    'dashboard.profile_save_error': 'Fehler beim Speichern Ihrer Profilinformationen.',
 
     // Legal Pages
     'legal.last_updated': 'Zuletzt aktualisiert',
@@ -554,8 +583,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'legal.privacy.automated_details': 'Es findet keine automatisierte Entscheidungsfindung einschließlich Profiling statt.',
 
     // Search Page
+    'search.title': 'Jobsuche',
+    'search.description_base': 'Finde deinen nächsten Job in der Pflege.',
+    'search.jobs_find': 'Jobs finden',
     'search.placeholder': 'Jobtitel, Ort, Stichwort...',
-    'search.filters': 'Filter',
     'search.min_salary': 'Min: {value}€',
     'search.max_salary': 'Max: {value}€',
     'search.city_helper': 'Wähle bis zu 3 Städte aus',
@@ -570,6 +601,40 @@ export const translations: Record<Language, Record<string, string>> = {
     'search.no_specialties_found': 'Keine Fachbereiche gefunden',
     'search.show_more': 'Mehr anzeigen ({count})',
     'search.show_less': 'Weniger anzeigen',
+    'search.active_filters': 'aktive Filter',
+    'search.remove_filter': '{filter} entfernen',
+    'search.min_salary_label': 'Mindestgehalt',
+    'search.max_salary_label': 'Maximalgehalt',
+    'search.posted_label': 'Veröffentlichung',
+    'search.posted_options.24h': 'Letzte 24 Stunden',
+    'search.posted_options.7d': 'Letzte 7 Tage',
+    'search.posted_options.30d': 'Letzte 30 Tage',
+    'search.no_info': 'Keine Angabe',
+    'search.radius_around': 'Radius um {city}',
+    'search.show_results': 'Ergebnisse anzeigen ({count})',
+    'search.filter_options': 'Filteroptionen',
+    'search.close_menu': 'Filtermenü schließen',
+    'search.reset_all_filters': 'Alle Filter zurücksetzen',
+    'search.search_specialties': 'Fachbereich suchen…',
+    'search.selected_count': 'Ausgewählt ({count})',
+    'search.no_jobs_found': 'Keine Jobs gefunden',
+    'search.no_jobs_found_description': 'Versuche, deine Filter anzupassen oder die Suche zurückzusetzen.',
+    'search.no_jobs_available': 'Keine Jobs verfügbar',
+    'search.no_jobs_available_description': 'Derzeit sind keine Jobs verfügbar. Bitte versuchen Sie es später erneut oder passen Sie Ihre Suche an.',
+    'search.reset_filters': 'Filter zurücksetzen',
+    'search.results_region_label': 'Suchergebnisse',
+    
+    // Contract Types
+    'contract.Vollzeit': 'Vollzeit',
+    'contract.Teilzeit': 'Teilzeit',
+    'contract.Minijob': 'Minijob',
+    'contract.Befristet': 'Befristet',
+
+    // Shift Types
+    'shift_type.tagschicht': 'Tagschicht',
+    'shift_type.nachtschicht': 'Nachtschicht',
+    'shift_type.wechselschicht': 'Wechselschicht',
+    'shift_type.bereitschaftsdienst': 'Bereitschaftsdienst',
     
     // Career Tools
     'career.title': 'Meine Karriere',
@@ -721,6 +786,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'privacy_settings.status_cancelled': 'Abgebrochen',
     'privacy_settings.submitted_on': 'Eingereicht am',
     'privacy_settings.completed_on': 'Abgeschlossen am',
+    'privacy_settings.title_short': 'Datenschutz',
 
     // Cookie Consent
     'cookie_consent.title': 'Ihre Cookie-Einstellungen',
@@ -1095,6 +1161,24 @@ export const translations: Record<Language, Record<string, string>> = {
     'job.post.of': 'of',
     'job.post.publish': 'Publish Job',
     'job.apply_for_position': 'Apply for this position',
+    'job.at_facility': 'at',
+    'job.default_facility': 'a facility',
+    'job.competitive_salary': 'Competitive Salary',
+    'job.apply_now_description': 'Apply for this position now.',
+    'job.remove_from_saved': 'Remove from saved',
+    'job.save_job': 'Save job',
+    'job.view_details_for': 'View details for {title} in {city}, {state}',
+    'job.posted_days_ago': 'Posted {days} days ago',
+    'job.tags_label': 'Tags',
+    'job.salary_range_label': 'Salary range: {salary_min} to {salary_max} {salary_unit}',
+    'job.by_agreement': 'By agreement',
+    'job.contract_shift_label': 'Contract type: {contract_type}, Shift type: {shift_type}',
+    'job.salary_label': 'Salary',
+    'job.contract_label': 'Contract',
+    'job.shift_label': 'Shift',
+    'job.description_heading': 'Job Description',
+    'job.requirements_heading': 'Requirements',
+    'job.bonus_heading': 'Bonus',
     
     // Application
     'application.cover_letter': 'Cover letter (optional)',
@@ -1105,6 +1189,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'application.message_sent_toast': 'Message sent',
     'application.send_message': 'Send message',
     'application.error_sending_message': 'Error sending message',
+    'application.submitting': 'Submitting...',
+    'applications.description': 'Manage your applications and communicate with employers.',
+    'applications.subtitle': 'Your overview of all applications and messages',
+    'applications.title_short': 'Privacy',
     
     // Carousels
     'carousel.recommended': 'Recommended',
@@ -1171,6 +1259,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'privacy_center.delete_cancel': 'Cancel',
     'cancel': 'Cancel',
     'common.download_pdf': 'Download PDF',
+    'common.remove_item': 'Remove {item}',
     
     // Errors
     'error.unauthorized': 'Unauthorized',
@@ -1189,6 +1278,12 @@ export const translations: Record<Language, Record<string, string>> = {
     'error.posting_limit_reached': 'Job Posting Limit Reached',
     'error.upgrade_subscription': 'Please upgrade your subscription to post more jobs.',
     'error.publish_failed': 'Publishing failed',
+    'error.page_not_found_seo_title': 'Page Not Found - 404',
+    'dashboard.load_data_error': 'Error loading dashboard data.',
+    'dashboard.profile_saved': 'Profile saved',
+    'dashboard.profile_saved_description': 'Your profile information has been successfully updated.',
+    'error.save_failed': 'Save failed',
+    'dashboard.profile_save_error': 'Error saving your profile information.',
 
     // Legal Pages
     'legal.last_updated': 'Last updated',
@@ -1282,8 +1377,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'legal.privacy.automated_details': 'No automated decision-making, including profiling, takes place.',
 
     // Search Page
+    'search.title': 'Job Search',
+    'search.description_base': 'Find your next job in healthcare.',
+    'search.jobs_find': 'jobs',
     'search.placeholder': 'Job title, location, keyword...',
-    'search.filters': 'Filters',
     'search.min_salary': 'Min: {value}€',
     'search.max_salary': 'Max: {value}€',
     'search.city_helper': 'Select up to 3 cities',
@@ -1298,7 +1395,41 @@ export const translations: Record<Language, Record<string, string>> = {
     'search.no_specialties_found': 'No specialties found',
     'search.show_more': 'Show more ({count})',
     'search.show_less': 'Show less',
+    'search.active_filters': 'active filters',
+    'search.remove_filter': 'Remove {filter}',
+    'search.min_salary_label': 'Minimum Salary',
+    'search.max_salary_label': 'Maximum Salary',
+    'search.posted_label': 'Posted',
+    'search.posted_options.24h': 'Last 24 hours',
+    'search.posted_options.7d': 'Last 7 days',
+    'search.posted_options.30d': 'Last 30 days',
+    'search.no_info': 'No info',
+    'search.radius_around': 'Radius around {city}',
+    'search.show_results': 'Show {count} results',
+    'search.filter_options': 'Filter options',
+    'search.close_menu': 'Close filter menu',
+    'search.reset_all_filters': 'Reset all filters',
+    'search.search_specialties': 'Search specialty…',
+    'search.selected_count': 'Selected ({count})',
+    'search.no_jobs_found': 'No jobs found',
+    'search.no_jobs_found_description': 'Try adjusting your filters or resetting the search.',
+    'search.no_jobs_available': 'No jobs available',
+    'search.no_jobs_available_description': 'Currently no jobs are available. Please try again later or adjust your search.',
+    'search.reset_filters': 'Reset Filters',
+    'search.results_region_label': 'Search results',
 
+    // Contract Types
+    'contract.Vollzeit': 'Full-time',
+    'contract.Teilzeit': 'Part-time',
+    'contract.Minijob': 'Mini-job',
+    'contract.Befristet': 'Temporary',
+
+    // Shift Types
+    'shift_type.tagschicht': 'Day shift',
+    'shift_type.nachtschicht': 'Night shift',
+    'shift_type.wechselschicht': 'Rotating shift',
+    'shift_type.bereitschaftsdienst': 'On-call duty',
+    
     // Career Tools
     'career.title': 'My Career',
     'career.subtitle': 'Professional tools for your application and career planning',
@@ -1449,6 +1580,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'privacy_settings.status_cancelled': 'Cancelled',
     'privacy_settings.submitted_on': 'Submitted on',
     'privacy_settings.completed_on': 'Completed on',
+    'privacy_settings.title_short': 'Privacy',
 
     // Cookie Consent
     'cookie_consent.title': 'Your Cookie Settings',
