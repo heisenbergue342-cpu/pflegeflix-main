@@ -59,7 +59,7 @@ export default function EmployerApplicants() {
   const [loading, setLoading] = useState(true);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = new Set<string>(); // Use a ref or state for this
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set()); // Corrected useState initialization
 
   // Filters from URL
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
@@ -198,7 +198,7 @@ export default function EmployerApplicants() {
       if (!error) {
         toast({ title: t('applicants.bulk_deleted') });
         loadApplicants();
-        selectedIds.clear(); // Clear the Set
+        setSelectedIds(new Set()); // Clear the Set
       }
     } else if (action === 'stage' && value) {
       const { error } = await supabase
@@ -209,7 +209,7 @@ export default function EmployerApplicants() {
       if (!error) {
         toast({ title: t('applicants.bulk_updated') });
         loadApplicants();
-        selectedIds.clear(); // Clear the Set
+        setSelectedIds(new Set()); // Clear the Set
       }
     }
   };
@@ -380,13 +380,15 @@ export default function EmployerApplicants() {
                         <Checkbox
                           checked={selectedIds.size === filteredApplicants.length && filteredApplicants.length > 0}
                           onCheckedChange={(checked) => {
-                            if (checked) {
-                              filteredApplicants.forEach(a => selectedIds.add(a.id));
-                            } else {
-                              selectedIds.clear();
-                            }
-                            // Force re-render
-                            setSelectedApplicant(null);
+                            setSelectedIds(prevSelectedIds => {
+                              const newSelection = new Set(prevSelectedIds);
+                              if (checked) {
+                                filteredApplicants.forEach(a => newSelection.add(a.id));
+                              } else {
+                                newSelection.clear();
+                              }
+                              return newSelection;
+                            });
                           }}
                         />
                       </th>
@@ -409,13 +411,15 @@ export default function EmployerApplicants() {
                           <Checkbox
                             checked={selectedIds.has(applicant.id)}
                             onCheckedChange={(checked) => {
-                              if (checked) {
-                                selectedIds.add(applicant.id);
-                              } else {
-                                selectedIds.delete(applicant.id);
-                              }
-                              // Force re-render
-                              setSelectedApplicant(null);
+                              setSelectedIds(prevSelectedIds => {
+                                const newSelection = new Set(prevSelectedIds);
+                                if (checked) {
+                                  newSelection.add(applicant.id);
+                                } else {
+                                  newSelection.delete(applicant.id);
+                                }
+                                return newSelection;
+                              });
                             }}
                           />
                         </td>

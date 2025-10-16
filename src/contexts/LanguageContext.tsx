@@ -287,7 +287,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'templates.type_interview': 'Einladung',
     'templates.type_offer': 'Angebot',
     'templates.type_rejection': 'Absage',
-    'templates.use_template': 'Vorlage verwenden...',
     
     // Common
     'common.loading': 'Laden...',
@@ -605,7 +604,6 @@ export const translations: Record<Language, Record<string, string>> = {
     'templates.type_interview': 'Interview',
     'templates.type_offer': 'Offer',
     'templates.type_rejection': 'Rejection',
-    'templates.use_template': 'Use template...',
     
     // Common
     'common.loading': 'Loading...',
@@ -634,7 +632,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.weekly': 'Weekly',
     'loading': 'Loading...',
     'search.filters': 'Filters',
-    'privacy_center.delete_cancel': 'Cancel',
+    'privacy_center.delete_cancel': 'Abbrechen',
     'cancel': 'Cancel',
     
     // Errors
