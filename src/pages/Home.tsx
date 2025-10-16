@@ -49,8 +49,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-netflix-bg">
       <SEO 
-        title="Traumjob in der Pflege finden"
-        description="Finde die perfekte Pflegestelle in Deutschland. Aktuelle Jobs in Kliniken, Krankenhäusern, Altenheimen und 1:1 Intensivpflege. Jetzt bewerben bei Pflegeflix."
+        title={t('hero.title')}
+        description={t('hero.subtitle')}
         canonical="/"
       />
       <OrganizationStructuredData />
@@ -71,8 +71,9 @@ export default function Home() {
             onClick={() => navigate('/search', { state: { autoFocus: true } })}
             size="lg"
             className="bg-netflix-red hover:bg-netflix-red-dark text-white text-lg px-8 py-6 rounded-sm shadow-2xl"
+            aria-label={t('nav.search')}
           >
-            <Search className="w-5 h-5 mr-2" />
+            <Search className="w-5 h-5 mr-2" aria-hidden="true" />
             {t('nav.search')}
           </Button>
         </div>
@@ -96,15 +97,16 @@ export default function Home() {
               <div className="min-h-[320px]">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <h2 className="text-2xl font-bold">Für Dich</h2>
+                    <Sparkles className="w-5 h-5 text-primary" aria-hidden="true" />
+                    <h2 className="text-2xl font-bold">{t('carousel.for_you')}</h2>
                   </div>
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => navigate('/for-you')}
+                    aria-label={t('common.view_results')}
                   >
-                    Alle ansehen
+                    {t('common.view_results')}
                   </Button>
                 </div>
                 <JobCarousel title="" jobs={personalizedJobs} priority={true} />
