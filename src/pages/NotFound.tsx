@@ -14,13 +14,8 @@ const NotFound = () => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
 
-  const title = language === 'de' 
-    ? 'Seite nicht gefunden – 404 | Pflegeflix' 
-    : 'Page Not Found – 404 | Pflegeflix';
-  
-  const description = language === 'de'
-    ? 'Die angeforderte Seite konnte nicht gefunden werden. Kehren Sie zur Startseite zurück oder nutzen Sie die Suche, um offene Pflegestellen zu finden.'
-    : 'The requested page could not be found. Return to the homepage or use the search to find open nursing positions.';
+  const title = t('error.page_not_found') + ' – 404 | Pflegeflix';
+  const description = t('error.page_not_found_description');
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,11 +38,11 @@ const NotFound = () => {
           title={t('error.page_not_found')}
           description={t('error.page_not_found_description')}
           action={{
-            label: language === 'de' ? 'Zur Startseite' : 'Go to Homepage',
+            label: t('menu.home'),
             onClick: () => navigate('/')
           }}
           secondaryAction={{
-            label: language === 'de' ? 'Jobs durchsuchen' : 'Browse Jobs',
+            label: t('nav.search'),
             onClick: () => navigate('/search')
           }}
         />
@@ -58,7 +53,7 @@ const NotFound = () => {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            {language === 'de' ? 'Zurück zur vorherigen Seite' : 'Back to previous page'}
+            {t('navigation.go_back')}
           </button>
         </div>
       </div>

@@ -285,6 +285,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'error.delete_failed': 'Löschen fehlgeschlagen',
     'error.duplicate_failed': 'Duplizierung fehlgeschlagen',
     'error.generic': 'Ein Fehler ist aufgetreten',
+    'error.page_not_found': 'Seite nicht gefunden',
+    'error.page_not_found_description': 'Entschuldigung, diese Seite existiert nicht.',
+    'navigation.go_back': 'Zurück',
+    'navigation.to_search': 'Zur Jobsuche',
   },
   en: {
     'nav.home': 'Home',
@@ -558,6 +562,10 @@ export const translations: Record<Language, Record<string, string>> = {
     'error.delete_failed': 'Delete failed',
     'error.duplicate_failed': 'Duplication failed',
     'error.generic': 'An error occurred',
+    'error.page_not_found': 'Page not found',
+    'error.page_not_found_description': 'Sorry, this page doesn’t exist.',
+    'navigation.go_back': 'Go Back',
+    'navigation.to_search': 'To Job Search',
   }
 };
 
