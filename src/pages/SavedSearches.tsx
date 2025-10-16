@@ -233,9 +233,7 @@ export default function SavedSearches() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">{t('saved_searches.title')}</h1>
           <p className="text-muted-foreground">
-            {language === 'de' 
-              ? 'Verwalten Sie Ihre gespeicherten Suchfilter und E-Mail-Benachrichtigungen'
-              : 'Manage your saved search filters and email notifications'}
+            {t('saved_searches.subtitle')}
           </p>
         </div>
 
@@ -273,7 +271,7 @@ export default function SavedSearches() {
                           setNewName(search.name);
                           setRenameDialogOpen(true);
                         }}
-                        aria-label={`${search.name} umbenennen`}
+                        aria-label={`${search.name} ${t('common.rename')}`}
                       >
                         <Edit2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -284,7 +282,7 @@ export default function SavedSearches() {
                           setSelectedSearch(search);
                           setDeleteDialogOpen(true);
                         }}
-                        aria-label={`${search.name} löschen`}
+                        aria-label={`${search.name} ${t('common.delete')}`}
                       >
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       </Button>
