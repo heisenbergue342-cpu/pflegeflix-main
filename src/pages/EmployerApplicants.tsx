@@ -59,8 +59,8 @@ export default function EmployerApplicants() {
   const [loading, setLoading] = useState(true);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
+  const [selectedIds, setSelectedIds] = new Set<string>(); // Use a ref or state for this
+
   // Filters from URL
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [stageFilter, setStageFilter] = useState(searchParams.get('stage') || 'all');
@@ -198,7 +198,7 @@ export default function EmployerApplicants() {
       if (!error) {
         toast({ title: t('applicants.bulk_deleted') });
         loadApplicants();
-        setSelectedIds(new Set());
+        selectedIds.clear(); // Clear the Set
       }
     } else if (action === 'stage' && value) {
       const { error } = await supabase
@@ -209,7 +209,7 @@ export default function EmployerApplicants() {
       if (!error) {
         toast({ title: t('applicants.bulk_updated') });
         loadApplicants();
-        setSelectedIds(new Set());
+        selectedIds.clear(); // Clear the Set
       }
     }
   };
@@ -381,10 +381,12 @@ export default function EmployerApplicants() {
                           checked={selectedIds.size === filteredApplicants.length && filteredApplicants.length > 0}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedIds(new Set(filteredApplicants.map(a => a.id)));
+                              filteredApplicants.forEach(a => selectedIds.add(a.id));
                             } else {
-                              setSelectedIds(new Set());
+                              selectedIds.clear();
                             }
+                            // Force re-render
+                            setSelectedApplicant(null);
                           }}
                         />
                       </th>
@@ -407,13 +409,13 @@ export default function EmployerApplicants() {
                           <Checkbox
                             checked={selectedIds.has(applicant.id)}
                             onCheckedChange={(checked) => {
-                              const newSet = new Set(selectedIds);
                               if (checked) {
-                                newSet.add(applicant.id);
+                                selectedIds.add(applicant.id);
                               } else {
-                                newSet.delete(applicant.id);
+                                selectedIds.delete(applicant.id);
                               }
-                              setSelectedIds(newSet);
+                              // Force re-render
+                              setSelectedApplicant(null);
                             }}
                           />
                         </td>

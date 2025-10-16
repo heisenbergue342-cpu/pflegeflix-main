@@ -312,6 +312,7 @@ export function ApplicantDrawer({ open, onOpenChange, applicant, onUpdate }: App
             </div>
             <Button variant="destructive" size="sm" onClick={handleDelete}>
               <Trash2 className="h-4 w-4" />
+              {t('common.delete')}
             </Button>
           </div>
 
@@ -469,7 +470,7 @@ export function ApplicantDrawer({ open, onOpenChange, applicant, onUpdate }: App
                 <div className="mb-4">
                   <Select value={selectedTemplate} onValueChange={applyTemplate}>
                     <SelectTrigger className="bg-input border-border">
-                      <SelectValue placeholder="Vorlage verwenden..." />
+                      <SelectValue placeholder={t('templates.use_template') || "Vorlage verwenden..."} />
                     </SelectTrigger>
                     <SelectContent>
                       {templates.map(template => (
@@ -513,7 +514,7 @@ export function ApplicantDrawer({ open, onOpenChange, applicant, onUpdate }: App
                   className="bg-input border-border resize-none"
                   rows={3}
                 />
-                <Button onClick={handleSendMessage} size="icon" className="self-end" aria-label="Nachricht senden">
+                <Button onClick={handleSendMessage} size="icon" className="self-end" aria-label={t('applicants.message_sent')}>
                   <Send className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
@@ -538,11 +539,11 @@ export function ApplicantDrawer({ open, onOpenChange, applicant, onUpdate }: App
                           <>
                             {t('applicants.changed_stage_from')}{' '}
                             <Badge variant="outline" className="text-xs">
-                              {act.details?.old_stage}
+                              {t(`applicants.${act.details?.old_stage}`)}
                             </Badge>
                             {' '}{t('applicants.to')}{' '}
                             <Badge variant="outline" className="text-xs">
-                              {act.details?.new_stage}
+                              {t(`applicants.${act.details?.new_stage}`)}
                             </Badge>
                           </>
                         )}
