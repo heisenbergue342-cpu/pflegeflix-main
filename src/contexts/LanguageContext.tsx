@@ -58,6 +58,9 @@ export const translations: Record<Language, Record<string, string>> = {
     // Auth
     'auth.switching_role': 'Rolle wird gewechselt...',
     'auth.switch_role': 'Rolle wechseln',
+    'auth.confirm_password': 'Passwort bestätigen',
+    'auth.passwords_match': 'Passwörter stimmen überein',
+    'auth.passwords_no_match': 'Passwörter stimmen nicht überein',
     
     // Employer Portal
     'employer.portal_title': 'Arbeitgeber-Portal',
@@ -345,6 +348,9 @@ export const translations: Record<Language, Record<string, string>> = {
     // Auth
     'auth.switching_role': 'Switching role...',
     'auth.switch_role': 'Switch role',
+    'auth.confirm_password': 'Confirm password',
+    'auth.passwords_match': 'Passwords match',
+    'auth.passwords_no_match': 'Passwords do not match',
     
     // Employer Portal
     'employer.portal_title': 'Employer Portal',
