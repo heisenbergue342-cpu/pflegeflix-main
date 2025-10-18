@@ -39,14 +39,13 @@ export function StepBasics({ formData, updateFormData }: StepBasicsProps) {
           <Label htmlFor="facility_type">{t("job.field.category")} *</Label>
           <Select
             value={formData.facility_type || ""}
-            onValueChange={(value) => updateFormData({ facility_type: value })}
+            onValueChange={(value) => updateFormData({ facility_type: value === 'Kliniken' ? 'Klinik' : value })}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder={t("job.field.category_placeholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Klinik">{t("category.clinics")}</SelectItem>
-              <SelectItem value="Krankenhaus">{t("category.hospital")}</SelectItem>
+              <SelectItem value="Kliniken">{t("category.clinics")}</SelectItem>
               <SelectItem value="Altenheim">{t("category.nursing_homes")}</SelectItem>
               <SelectItem value="1zu1">{t("category.intensive_care")}</SelectItem>
             </SelectContent>

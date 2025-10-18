@@ -26,7 +26,7 @@ import SEO from "@/components/SEO";
 type ViewMode = "table" | "grid";
 type SortBy = "newest" | "applications" | "views";
 type StatusFilter = "all" | "draft" | "online" | "paused" | "closed" | "expired";
-type CategoryFilter = "all" | "Klinik/Krankenhaus" | "Altenheim" | "1:1 Intensivpflege";
+type CategoryFilter = "all" | "Kliniken" | "Altenheim" | "1:1 Intensivpflege";
 
 export default function EmployerDashboard() {
   const navigate = useNavigate();
@@ -121,7 +121,14 @@ export default function EmployerDashboard() {
 
     // Category filter
     if (categoryFilter !== "all") {
-      result = result.filter(job => job.facility_type === categoryFilter);
+      result = result.filter(job => {
+        if (categoryFilter === "Kliniken") {
+          return job.facility_type === "Klinik" || job.facility_type === "Krankenhaus";
+        }
+        if (categoryFilter === "Altenheim") return job.facility_type === "Altenheim";
+        if (categoryFilter === "1:1 Intensivpflege") return job.facility_type === "1zu1";
+        return true;
+      });
     }
 
     // Sort
@@ -340,7 +347,7 @@ export default function EmployerDashboard() {
   };
 
   const exportCSV = () => {
-    const headers = ["Titel", "Standort", "Status", "Aufrufe", "Bewerbungen", "Gespeichert", "Aktualisiert"];
+    const headers = ["Titel", "Standort", "Status", "Aufrufe", "Bewerbungen", "Gespeichert", "Aktualisiert", "Kategorie"];
     const rows = filteredJobs.map(job => [
       job.title,
       `${job.city}, ${job.state}`,
@@ -349,6 +356,9 @@ export default function EmployerDashboard() {
       job.applications_count || 0,
       job.saves_count || 0,
       new Date(job.updated_at).toLocaleDateString(language === "de" ? "de-DE" : "en-US"),
+      job.facility_type === "Klinik" || job.facility_type === "Krankenhaus" ? "Kliniken"
+        : job.facility_type === "Altenheim" ? "Altenheime"
+        : "1:1 Intensivpflege",
     ]);
 
     const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
@@ -476,9 +486,9 @@ export default function EmployerDashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("dashboard.filter.all_categories")}</SelectItem>
-                <SelectItem value="Klinik/Krankenhaus">{t("category.clinics")}</SelectItem>
-                <SelectItem value="Altenheim">{t("category.nursing_homes")}</SelectItem>
-                <SelectItem value="1:1 Intensivpflege">{t("category.intensive_care")}</SelectItem>
+                <SelectItem value="Kliniken">{t('category.clinics')}</SelectItem>
+                <SelectItem value="Altenheim">{t('category.nursing_homes')}</SelectItem>
+                <SelectItem value="1:1 Intensivpflege">{t('category.intensive_care')}</SelectItem>
               </SelectContent>
             </Select>
 

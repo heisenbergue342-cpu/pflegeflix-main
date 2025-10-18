@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /job/
+Allow: /jobs/kliniken
+Allow: /jobs/altenheime
 Disallow: /search?
 Disallow: /*?facilities*
 Disallow: /*?contracts*
@@ -11,10 +13,5 @@ Disallow: /*?posted*
 Disallow: /*?near*
 Disallow: /employer
 Disallow: /auth
-# Important: Hub pages are indexable
-Allow: /jobs/city/
-Allow: /jobs/category/
 
 Sitemap: https://pflegeflix.lovable.app/sitemap.xml
-# If using Supabase Edge Function for sitemap:
-# Sitemap: https://<YOUR_SUPABASE_PROJECT>.functions.supabase.co/generate-sitemap

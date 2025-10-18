@@ -110,13 +110,13 @@ Deno.serve(async (req) => {
 
     // Add curated Category Hubs
     const categoryHubs = [
-      { slug: 'kliniken-und-krankenhaeuser' },
+      { slug: 'kliniken' },
       { slug: 'altenheime' },
       { slug: 'intensivpflege' },
     ];
     categoryHubs.forEach(({ slug }) => {
       sitemap += `  <url>
-    <loc>${baseUrl}/jobs/category/${slug}</loc>
+    <loc>${baseUrl}/jobs/${slug}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

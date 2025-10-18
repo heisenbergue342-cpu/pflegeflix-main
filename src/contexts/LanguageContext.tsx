@@ -92,7 +92,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'employer.message_templates': 'Nachrichtenvorlagen',
     
     // Categories
-    'category.clinics': 'Klinik',
+    'category.clinics': 'Kliniken',
     'category.hospital': 'Krankenhaus',
     'category.nursing_homes': 'Altenheime',
     'category.intensive_care': 'Intensivpflege',
@@ -886,7 +886,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'employer.message_templates': 'Message Templates',
     
     // Categories
-    'category.clinics': 'Clinic',
+    'category.clinics': 'Clinics',
     'category.hospital': 'Hospital',
     'category.nursing_homes': 'Nursing Homes',
     'category.intensive_care': 'Intensive Care',
@@ -1269,7 +1269,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'error.duplicate_failed': 'Duplication failed',
     'error.generic': 'An error occurred',
     'error.page_not_found': 'Page not found',
-    'error.page_not_found_description': 'Sorry, this page doesn’t exist.',
+    'error.page_not_found_description': 'Sorry, this page doesn\'t exist.',
     'navigation.go_back': 'Go Back',
     'navigation.to_search': 'To Job Search',
     'error.job_not_found': 'Job not found',

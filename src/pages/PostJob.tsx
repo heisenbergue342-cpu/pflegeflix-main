@@ -367,9 +367,11 @@ export default function PostJob() {
     setPublishedJobId(newJob.id);
     setPublishSuccess(true);
     setHasUnsavedChanges(false);
-    // Track publish event
-    trackAnalyticsEvent('job_post_published', { jobId: newJob.id });
-    // Ping search engines to refresh sitemap (Edge Function)
+    const category =
+      newJob.facility_type === 'Altenheim' ? 'Altenheime' :
+      newJob.facility_type === '1zu1' ? '1:1 Intensivpflege' :
+      'Kliniken';
+    trackAnalyticsEvent('job_post_published', { jobId: newJob.id, category });
     await supabase.functions.invoke('ping-search-engines', {
       body: { sitemapUrl: 'https://pflegeflix.lovable.app/sitemap.xml' }
     });

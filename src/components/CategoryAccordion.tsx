@@ -32,12 +32,12 @@ interface Category {
 const CATEGORIES: Category[] = [
   {
     key: 'clinics',
-    labelDE: 'Kliniken & Krankenhäuser',
-    labelEN: 'Clinics & Hospitals',
-    descDE: 'Finde Jobs in Kliniken und Krankenhäusern',
-    descEN: 'Find jobs in clinics and hospitals',
+    labelDE: 'Kliniken',
+    labelEN: 'Clinics',
+    descDE: 'Finde Jobs in Kliniken',
+    descEN: 'Find jobs in clinics',
     icon: Building2,
-    facility: 'Krankenhaus',
+    facility: 'Klinik',
     subCategories: [
       { key: 'icu', labelDE: 'Intensivstation', labelEN: 'ICU', tag: 'Intensivstation' },
       { key: 'surgery', labelDE: 'OP/Anästhesie', labelEN: 'Surgery/Anesthesia', tag: 'OP' },
@@ -113,29 +113,46 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
   // Fetch counts for category tiles and subcategories
   useEffect(() => {
     const fetchCounts = async () => {
-      // Fetch total counts per facility type
       const facilityCounts: Partial<Record<FacilityType, number>> = {};
       for (const category of CATEGORIES) {
-        const { count } = await supabase
-          .from('jobs')
-          .select('*', { count: 'exact', head: true })
-          .eq('approved', true)
-          .eq('facility_type', category.facility);
-        facilityCounts[category.facility] = count || 0;
-      }
-      setCategoryCounts(facilityCounts as Record<FacilityType, number>);
-
-      // Fetch subcategory counts
-      const counts: Record<string, number> = {};
-      for (const category of CATEGORIES) {
-        for (const sub of category.subCategories) {
+        if (category.key === 'clinics') {
+          const [{ count: klinikCount }, { count: krankenhausCount }] = await Promise.all([
+            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Klinik'),
+            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Krankenhaus'),
+          ]);
+          facilityCounts['Klinik'] = (klinikCount || 0) + (krankenhausCount || 0);
+        } else {
           const { count } = await supabase
             .from('jobs')
             .select('*', { count: 'exact', head: true })
             .eq('approved', true)
-            .eq('facility_type', category.facility)
-            .contains('tags', [sub.tag]);
-          counts[sub.key] = count || 0;
+            .eq('facility_type', category.facility);
+          facilityCounts[category.facility] = count || 0;
+        }
+      }
+      setCategoryCounts(facilityCounts as Record<FacilityType, number>);
+
+      // Subcategory counts (unchanged logic but clinics query includes both facility types)
+      const counts: Record<string, number> = {};
+      for (const category of CATEGORIES) {
+        for (const sub of category.subCategories) {
+          if (category.key === 'clinics') {
+            const { count } = await supabase
+              .from('jobs')
+              .select('*', { count: 'exact', head: true })
+              .eq('approved', true)
+              .in('facility_type', ['Klinik', 'Krankenhaus'])
+              .contains('tags', [sub.tag]);
+            counts[sub.key] = count || 0;
+          } else {
+            const { count } = await supabase
+              .from('jobs')
+              .select('*', { count: 'exact', head: true })
+              .eq('approved', true)
+              .eq('facility_type', category.facility)
+              .contains('tags', [sub.tag]);
+            counts[sub.key] = count || 0;
+          }
         }
       }
       setSubcategoryCounts(counts);
@@ -157,7 +174,11 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
 
   const handleSubCategoryClick = (category: Category, sub: SubCategory) => {
     const params = new URLSearchParams();
-    params.set('facilities', category.facility);
+    if (category.key === 'clinics') {
+      params.set('facilities', ['Klinik', 'Krankenhaus'].join(','));
+    } else {
+      params.set('facilities', category.facility);
+    }
     params.set('specialties', sub.tag);
     
     navigate(`/search?${params.toString()}`);
@@ -167,8 +188,11 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
   const isParentActive = (category: Category) => {
     if (location.pathname !== '/search') return false;
     const params = new URLSearchParams(location.search);
-    const facilities = params.get('facilities');
-    return facilities === category.facility;
+    const facilities = params.get('facilities')?.split(',') || [];
+    if (category.key === 'clinics') {
+      return facilities.includes('Klinik') || facilities.includes('Krankenhaus');
+    }
+    return facilities.includes(category.facility);
   };
 
   // Keyboard navigation for grid

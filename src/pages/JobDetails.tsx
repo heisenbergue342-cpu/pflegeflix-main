@@ -55,8 +55,11 @@ export default function JobDetails() {
     
     setJob(data);
     setLoading(false);
-    // Track job viewed
-    trackAnalyticsEvent('job_viewed', { jobId: data.id, city: data.city, state: data.state });
+    const category =
+      data.facility_type === 'Altenheim' ? 'Altenheime' :
+      data.facility_type === '1zu1' ? '1:1 Intensivpflege' :
+      'Kliniken';
+    trackAnalyticsEvent('job_viewed', { jobId: data.id, city: data.city, state: data.state, category });
   };
 
   const checkIfSaved = async () => {
@@ -119,7 +122,11 @@ export default function JobDetails() {
       navigate('/applications');
     }
     if (!error) {
-      trackAnalyticsEvent('application_submitted', { jobId: id });
+      const category =
+        job.facility_type === 'Altenheim' ? 'Altenheime' :
+        job.facility_type === '1zu1' ? '1:1 Intensivpflege' :
+        'Kliniken';
+      trackAnalyticsEvent('application_submitted', { jobId: id, category });
     }
     setApplying(false);
   };

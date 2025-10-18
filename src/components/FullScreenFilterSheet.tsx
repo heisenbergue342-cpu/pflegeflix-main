@@ -267,14 +267,29 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
             <section aria-labelledby="facility-heading">
               <h3 id="facility-heading" className="text-lg font-bold mb-3">{t('job.field.facility_type')}</h3>
               <div className="flex flex-wrap gap-3">
-                {['Klinik', 'Altenheim', '1zu1'].map(type => (
-                  <PillChip
-                    key={type}
-                    label={t(`category.${type.toLowerCase().replace('1zu1', 'intensive_care')}`)}
-                    selected={localFilters.facilities.includes(type)}
-                    onClick={() => toggleArrayFilter('facilities', type)}
-                  />
-                ))}
+                <PillChip
+                  label={t('category.clinics')}
+                  selected={localFilters.facilities.includes('Klinik') || localFilters.facilities.includes('Krankenhaus')}
+                  onClick={() => {
+                    const hasClinics = localFilters.facilities.includes('Klinik') || localFilters.facilities.includes('Krankenhaus');
+                    setLocalFilters(prev => ({
+                      ...prev,
+                      facilities: hasClinics
+                        ? prev.facilities.filter(f => f !== 'Klinik' && f !== 'Krankenhaus')
+                        : [...prev.facilities, 'Klinik', 'Krankenhaus']
+                    }));
+                  }}
+                />
+                <PillChip
+                  label={t('category.nursing_homes')}
+                  selected={localFilters.facilities.includes('Altenheim')}
+                  onClick={() => toggleArrayFilter('facilities', 'Altenheim')}
+                />
+                <PillChip
+                  label={t('category.intensive_care')}
+                  selected={localFilters.facilities.includes('1zu1')}
+                  onClick={() => toggleArrayFilter('facilities', '1zu1')}
+                />
               </div>
             </section>
 

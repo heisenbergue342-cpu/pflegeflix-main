@@ -22,10 +22,10 @@ interface Category {
 const DEFAULT_CATEGORIES: Category[] = [
   {
     key: 'clinics',
-    labelDE: 'Kliniken & Krankenhäuser',
-    labelEN: 'Clinics & Hospitals',
+    labelDE: 'Kliniken',
+    labelEN: 'Clinics',
     icon: Building2,
-    facility: 'Krankenhaus',
+    facility: 'Klinik',
   },
   {
     key: 'nursing_homes',
@@ -87,12 +87,20 @@ export default function CategorySlimList({ onNavigate, showHeader = true }: Cate
     const fetchCounts = async () => {
       const facilityCounts: Partial<Record<FacilityType, number>> = {};
       for (const category of categories) {
-        const { count } = await supabase
-          .from('jobs')
-          .select('*', { count: 'exact', head: true })
-          .eq('approved', true)
-          .eq('facility_type', category.facility);
-        facilityCounts[category.facility] = count || 0;
+        if (category.key === 'clinics') {
+          const [{ count: klinikCount }, { count: krankenhausCount }] = await Promise.all([
+            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Klinik'),
+            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Krankenhaus'),
+          ]);
+          facilityCounts['Klinik'] = (klinikCount || 0) + (krankenhausCount || 0);
+        } else {
+          const { count } = await supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('approved', true)
+            .eq('facility_type', category.facility);
+          facilityCounts[category.facility] = count || 0;
+        }
       }
       setCategoryCounts(facilityCounts as Record<FacilityType, number>);
     };
@@ -102,7 +110,11 @@ export default function CategorySlimList({ onNavigate, showHeader = true }: Cate
 
   const handleCategoryClick = (facility: FacilityType) => {
     const params = new URLSearchParams();
-    params.set('facilities', facility);
+    if (facility === 'Klinik') {
+      params.set('facilities', ['Klinik', 'Krankenhaus'].join(','));
+    } else {
+      params.set('facilities', facility);
+    }
     navigate(`/search?${params.toString()}`);
     onNavigate?.();
   };
@@ -176,7 +188,9 @@ export default function CategorySlimList({ onNavigate, showHeader = true }: Cate
       <div className={showHeader ? "space-y-0" : "space-y-0 mt-2"}>
         {categories.map((category, index) => {
           const Icon = category.icon;
-          const count = categoryCounts[category.facility] || 0;
+          const count = category.key === 'clinics'
+            ? (categoryCounts['Klinik'] || 0)
+            : (categoryCounts[category.facility] || 0);
           const label = language === 'de' ? category.labelDE : category.labelEN;
 
           return (

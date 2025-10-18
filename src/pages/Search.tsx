@@ -291,18 +291,47 @@ export default function Search() {
         {/* Active filters as removable pills */}
         {activeFilterCount > 0 && (
           <div className="mb-6 flex flex-wrap gap-2">
+            {/* Facilities badges: compress Klinik+Krankenhaus into one 'Kliniken' */}
+            {(() => {
+              const hasKlinik = filters.facilities.includes('Klinik');
+              const hasKrankenhaus = filters.facilities.includes('Krankenhaus');
+              const otherFacilities = filters.facilities.filter(f => f !== 'Klinik' && f !== 'Krankenhaus');
+              const badges: JSX.Element[] = [];
+              if (hasKlinik || hasKrankenhaus) {
+                badges.push(
+                  <Badge key="Kliniken" variant="secondary" className="gap-1 pr-1">
+                    {t('category.clinics')}
+                    <button
+                      onClick={() => {
+                        const newFacilities = filters.facilities.filter(f => f !== 'Klinik' && f !== 'Krankenhaus');
+                        handleApplyFilters({ ...filters, facilities: newFacilities });
+                      }}
+                      className="ml-1 hover:bg-primary/20 rounded-full p-0.5"
+                      aria-label={t('search.remove_filter', { filter: t('category.clinics') })}
+                    >
+                      <X className="w-3 h-3" aria-hidden="true" />
+                    </button>
+                  </Badge>
+                );
+              }
+              badges.push(...otherFacilities.map(f => (
+                <Badge key={f} variant="secondary" className="gap-1 pr-1">
+                  {f === 'Altenheim' ? t('category.nursing_homes') : f === '1zu1' ? t('category.intensive_care') : f}
+                  <button
+                    onClick={() => removeFilter('facilities', f)}
+                    className="ml-1 hover:bg-primary/20 rounded-full p-0.5"
+                    aria-label={t('search.remove_filter', { filter: f })}
+                  >
+                    <X className="w-3 h-3" aria-hidden="true" />
+                  </button>
+                </Badge>
+              )));
+              return badges;
+            })()}
             {filters.cities.map(city => (
               <Badge key={city} variant="secondary" className="gap-1 pr-1">
                 {city}
                 <button onClick={() => removeFilter('cities', city)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_city', { city })}>
-                  <X className="w-3 h-3" aria-hidden="true" />
-                </button>
-              </Badge>
-            ))}
-            {filters.facilities.map(f => (
-              <Badge key={f} variant="secondary" className="gap-1 pr-1">
-                {f}
-                <button onClick={() => removeFilter('facilities', f)} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: f })}>
                   <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>
