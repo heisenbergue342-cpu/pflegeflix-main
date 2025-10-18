@@ -31,6 +31,6 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: (error as Error).message || 'Unknown error' }), {
       headers: corsHeaders,
       status: 500,
-    });
+    };
   }
 });
