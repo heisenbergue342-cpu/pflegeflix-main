@@ -11,6 +11,7 @@ import { Heart, MapPin, Briefcase, Clock, Euro } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import { JobPostingStructuredData, BreadcrumbStructuredData, OrganizationStructuredData } from '@/components/StructuredData';
+import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 
 export default function JobDetails() {
   const { id } = useParams();
@@ -54,6 +55,8 @@ export default function JobDetails() {
     
     setJob(data);
     setLoading(false);
+    // Track job viewed
+    trackAnalyticsEvent('job_viewed', { jobId: data.id, city: data.city, state: data.state });
   };
 
   const checkIfSaved = async () => {
@@ -97,7 +100,8 @@ export default function JobDetails() {
       navigate('/auth');
       return;
     }
-
+    // Track apply click
+    trackAnalyticsEvent('apply_click', { jobId: id });
     setApplying(true);
     const { error } = await supabase
       .from('applications')
@@ -113,6 +117,9 @@ export default function JobDetails() {
       toast.success(t('application.success'));
       setCoverLetter('');
       navigate('/applications');
+    }
+    if (!error) {
+      trackAnalyticsEvent('application_submitted', { jobId: id });
     }
     setApplying(false);
   };

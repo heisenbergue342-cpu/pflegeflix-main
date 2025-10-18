@@ -108,6 +108,38 @@ Deno.serve(async (req) => {
   </url>
 `;
 
+    // Add curated Category Hubs
+    const categoryHubs = [
+      { slug: 'kliniken-und-krankenhaeuser' },
+      { slug: 'altenheime' },
+      { slug: 'intensivpflege' },
+    ];
+    categoryHubs.forEach(({ slug }) => {
+      sitemap += `  <url>
+    <loc>${baseUrl}/jobs/category/${slug}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+    });
+
+    // Add curated City Hubs (top cities only to keep sitemap reasonable)
+    const cityHubs = [
+      'berlin','hamburg','muenchen','koeln','frankfurt-am-main','stuttgart','duesseldorf',
+      'dortmund','essen','leipzig','bremen','dresden','hannover','nuernberg','duisburg',
+      'bochum','wuppertal','bielefeld','bonn','muenster'
+    ];
+    cityHubs.forEach((slug) => {
+      sitemap += `  <url>
+    <loc>${baseUrl}/jobs/city/${slug}</loc>
+    <lastmod>${now}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+    });
+
     // Add job detail pages with enhanced metadata
     jobs?.forEach((job) => {
       const lastmod = job.updated_at || now;

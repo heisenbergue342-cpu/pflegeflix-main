@@ -14,6 +14,7 @@ import { StepCompensation } from "@/components/post-job/StepCompensation";
 import { StepApplication } from "@/components/post-job/StepApplication";
 import { StepPreview } from "@/components/post-job/StepPreview";
 import SEO from "@/components/SEO";
+import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 
 export default function PostJob() {
   const { draftId } = useParams();
@@ -366,6 +367,12 @@ export default function PostJob() {
     setPublishedJobId(newJob.id);
     setPublishSuccess(true);
     setHasUnsavedChanges(false);
+    // Track publish event
+    trackAnalyticsEvent('job_post_published', { jobId: newJob.id });
+    // Ping search engines to refresh sitemap (Edge Function)
+    await supabase.functions.invoke('ping-search-engines', {
+      body: { sitemapUrl: 'https://pflegeflix.lovable.app/sitemap.xml' }
+    });
   };
 
   const renderStep = () => {

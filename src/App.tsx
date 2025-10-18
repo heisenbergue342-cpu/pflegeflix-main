@@ -44,6 +44,8 @@ const CareerTools = lazy(() => import("./pages/CareerTools"));
 const CVBuilder = lazy(() => import("./pages/CVBuilder"));
 const CoverLetterGenerator = lazy(() => import("./pages/CoverLetterGenerator"));
 const SalaryPlanner = lazy(() => import("./pages/SalaryPlanner"));
+const CityHub = lazy(() => import("./pages/hubs/CityHub"));
+const CategoryHub = lazy(() => import("./pages/hubs/CategoryHub"));
 
 const queryClient = new QueryClient();
 
@@ -81,6 +83,9 @@ const App = () => (
                 <Route path="/cv-builder" element={<CVBuilder />} />
                 <Route path="/cover-letter" element={<CoverLetterGenerator />} />
                 <Route path="/salary-planner" element={<SalaryPlanner />} />
+                
+                <Route path="/jobs/city/:slug" element={<CityHub />} />
+                <Route path="/jobs/category/:slug" element={<CategoryHub />} />
                 
                 {/* Employer Portal with nested routes */}
                 <Route path="/employer" element={<EmployerPortal />}>

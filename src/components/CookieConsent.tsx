@@ -190,6 +190,9 @@ export default function CookieConsent() {
       version: CONSENT_VERSION,
       timestamp: new Date().toISOString(),
     });
+    import('@/hooks/useAnalytics').then(({ trackAnalyticsEvent }) => {
+      trackAnalyticsEvent('cookie_preferences_changed', { analyticsEnabled: true, marketingEnabled: true });
+    });
   };
 
   const rejectAll = () => {
@@ -199,6 +202,9 @@ export default function CookieConsent() {
       marketing: false,
       version: CONSENT_VERSION,
       timestamp: new Date().toISOString(),
+    });
+    import('@/hooks/useAnalytics').then(({ trackAnalyticsEvent }) => {
+      trackAnalyticsEvent('cookie_preferences_changed', { analyticsEnabled: false, marketingEnabled: false });
     });
   };
 

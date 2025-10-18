@@ -77,6 +77,8 @@ export function JobPostingStructuredData({ job }: { job: any }) {
 
     // Add salary if available
     if (job.salary_min && job.salary_max && job.salary_unit) {
+      const unit = job.salary_unit;
+      const unitText = unit === '€/h' ? 'HOUR' : unit === '€/Monat' ? 'MONTH' : 'MONTH';
       jobPosting['baseSalary'] = {
         '@type': 'MonetaryAmount',
         'currency': 'EUR',
@@ -84,9 +86,7 @@ export function JobPostingStructuredData({ job }: { job: any }) {
           '@type': 'QuantitativeValue',
           'minValue': job.salary_min,
           'maxValue': job.salary_max,
-          'unitText': job.salary_unit === '/Monat' ? 'MONTH' : 
-                      job.salary_unit === '/Stunde' ? 'HOUR' : 
-                      job.salary_unit === '/Jahr' ? 'YEAR' : 'MONTH'
+          'unitText': unitText
         }
       };
     }

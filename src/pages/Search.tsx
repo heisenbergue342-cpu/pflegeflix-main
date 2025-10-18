@@ -171,6 +171,11 @@ export default function Search() {
     
     setSearchParams(params);
     
+    // Track analytics event (consent-aware)
+    import('@/hooks/useAnalytics').then(({ trackAnalyticsEvent }) => {
+      trackAnalyticsEvent('filter_applied', { activeFilters: activeFilterCount + 0 });
+    });
+    
     // Restore scroll position after applying filters
     requestAnimationFrame(() => {
       window.scrollTo({ top: scrollPositionRef.current, behavior: 'instant' as ScrollBehavior });
@@ -216,12 +221,17 @@ export default function Search() {
     return desc;
   }, [filters, t]);
 
+  const seoNoindex = useMemo(() => {
+    return activeFilterCount > 0 || !!searchQuery;
+  }, [activeFilterCount, searchQuery]);
+
   return (
     <div className="min-h-screen bg-netflix-bg">
       <SEO 
         title={seoTitle}
         description={seoDescription}
         canonical="/search"
+        noindex={seoNoindex}
       />
       <BreadcrumbStructuredData 
         items={[
@@ -241,7 +251,7 @@ export default function Search() {
               type="search"
               placeholder={t('search.placeholder')}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 bg-netflix-card border-netflix-card text-white"
               aria-label={t('search.placeholder')}
               enterKeyHint="search"
@@ -411,3 +421,12 @@ export default function Search() {
     </div>
   );
 }
+
+const onSearchChange = (value: string) => {
+  setSearchQuery(value);
+  import('@/hooks/useAnalytics').then(({ trackAnalyticsEvent }) => {
+    if (value.trim().length > 0) {
+      trackAnalyticsEvent('search_performed', { q: value.trim() });
+    }
+  });
+};

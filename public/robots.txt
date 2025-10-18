@@ -1,33 +1,20 @@
-# Pflegeflix - Robots.txt
 User-agent: *
-Allow: /
-
-# Disallow authenticated pages
-Disallow: /auth
-Disallow: /dashboard
-Disallow: /saved
-Disallow: /saved-searches
-Disallow: /applications
-Disallow: /privacy-settings
-Disallow: /employer
-Disallow: /employer/*
-Disallow: /admin
-Disallow: /admin/*
-
-# Allow public pages
-Allow: /
-Allow: /search
 Allow: /job/
-Allow: /impressum
-Allow: /privacy
-Allow: /datenschutz
-Allow: /bewerber-datenschutz
-Allow: /agb
-Allow: /avv
-Allow: /dpa
-Allow: /cookie-policy
-Allow: /privacy-center
-Allow: /accessibility-statement
+Disallow: /search?
+Disallow: /*?facilities*
+Disallow: /*?contracts*
+Disallow: /*?specialties*
+Disallow: /*?shiftTypes*
+Disallow: /*?salaryMin*
+Disallow: /*?salaryMax*
+Disallow: /*?posted*
+Disallow: /*?near*
+Disallow: /employer
+Disallow: /auth
+# Important: Hub pages are indexable
+Allow: /jobs/city/
+Allow: /jobs/category/
 
-# Sitemap
 Sitemap: https://pflegeflix.lovable.app/sitemap.xml
+# If using Supabase Edge Function for sitemap:
+# Sitemap: https://<YOUR_SUPABASE_PROJECT>.functions.supabase.co/generate-sitemap
