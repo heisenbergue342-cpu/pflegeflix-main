@@ -384,7 +384,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
               currentFilters={{
                 cities: localFilters.cities,
                 facilities: localFilters.facilities,
-                contracts: localFilters.filters.contracts,
+                contracts: localFilters.contracts,
                 posted: localFilters.posted
               }}
             />
