@@ -1,3 +1,6 @@
 project_id = "nuwqutcgqhjhzxjzqxxo"
+// ... existing code ...
+
 [functions.generate-sitemap]
 verify_jwt = false
+// ... existing code ...

@@ -12,22 +12,24 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Prefer environment variables; fallback to provided project details if not set
+    const supabaseUrl =
+      Deno.env.get('SUPABASE_URL') ||
+      'https://nuwqutcgqhjhzxjzqxxo.supabase.co';
+
+    // Try service role first; otherwise fall back to anon key (public)
+    const supabaseKey =
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ||
+      Deno.env.get('SUPABASE_ANON_KEY') ||
+      // Public anon key fallback (provided)
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im51d3F1dGNncWhqaHp4anpxeHhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODIwOTEsImV4cCI6MjA3NjM1ODA5MX0.D8UwXh0AohnjN19OwD7IN_R_E1yz7e07hAqFw9Lr8n4';
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch all approved and active jobs with facility info
+    // Fetch approved/active jobs via public view (RLS-friendly)
     const { data: jobs, error } = await supabase
-      .from('jobs')
-      .select(`
-        id, 
-        title,
-        city, 
-        state, 
-        facility_type,
-        updated_at
-      `)
-      .eq('approved', true)
+      .from('jobs_public')
+      .select('id, title, city, state, facility_type, updated_at, is_active')
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
 
@@ -108,7 +110,7 @@ Deno.serve(async (req) => {
   </url>
 `;
 
-    // Add curated Category Hubs
+    // Category Hubs
     const categoryHubs = [
       { slug: 'kliniken' },
       { slug: 'altenheime' },
@@ -124,7 +126,7 @@ Deno.serve(async (req) => {
 `;
     });
 
-    // Add curated City Hubs (top cities only to keep sitemap reasonable)
+    // Curated City Hubs
     const cityHubs = [
       'berlin','hamburg','muenchen','koeln','frankfurt-am-main','stuttgart','duesseldorf',
       'dortmund','essen','leipzig','bremen','dresden','hannover','nuernberg','duisburg',
@@ -140,12 +142,9 @@ Deno.serve(async (req) => {
 `;
     });
 
-    // Add job detail pages with enhanced metadata
+    // Job detail pages
     jobs?.forEach((job) => {
       const lastmod = job.updated_at || now;
-      const jobTitle = encodeURIComponent(job.title || 'Job');
-      const location = `${job.city}, ${job.state}`;
-      
       sitemap += `  <url>
     <loc>${baseUrl}/job/${job.id}</loc>
     <lastmod>${lastmod}</lastmod>
