@@ -57,7 +57,8 @@ export type AnalyticsEvent =
   | 'carousel_interaction'
   | 'navigation_menu_opened'
   | 'cookie_preferences_changed'
-  | 'error_occurred';
+  | 'error_occurred'
+  | 'menu_category_click';
 
 export interface AnalyticsEventProps {
   [key: string]: string | number | boolean | undefined;

@@ -35,7 +35,8 @@ export default function Home() {
   };
 
   const featuredJobs = jobs.filter(j => j.featured);
-  const clinicJobs = jobs.filter(j => j.facility_type === 'Klinik' || j.facility_type === 'Krankenhaus');
+  const clinicJobs = jobs.filter(j => j.facility_type === 'Klinik');
+  const hospitalJobs = jobs.filter(j => j.facility_type === 'Krankenhaus');
   const nursingHomeJobs = jobs.filter(j => j.facility_type === 'Altenheim');
   const oneOnOneJobs = jobs.filter(j => j.facility_type === '1zu1');
   const nightPartTimeJobs = jobs.filter(j => j.shift_type?.includes('Nacht') || j.contract_type === 'Teilzeit');
@@ -118,9 +119,16 @@ export default function Home() {
                 <JobCarousel title={t('carousel.recommended')} jobs={featuredJobs} priority={!user} />
               </div>
             )}
-            <div className="min-h-[320px]">
-              <JobCarousel title={t('carousel.clinics')} jobs={clinicJobs} />
-            </div>
+            {clinicJobs.length > 0 && (
+              <div className="min-h-[320px]">
+                <JobCarousel title={t('category.clinics')} jobs={clinicJobs} />
+              </div>
+            )}
+            {hospitalJobs.length > 0 && (
+              <div className="min-h-[320px]">
+                <JobCarousel title={t('category.hospitals')} jobs={hospitalJobs} />
+              </div>
+            )}
             <div className="min-h-[320px]">
               <JobCarousel title={t('carousel.nursing_homes')} jobs={nursingHomeJobs} />
             </div>

@@ -26,7 +26,7 @@ import SEO from "@/components/SEO";
 type ViewMode = "table" | "grid";
 type SortBy = "newest" | "applications" | "views";
 type StatusFilter = "all" | "draft" | "online" | "paused" | "closed" | "expired";
-type CategoryFilter = "all" | "Kliniken" | "Altenheim" | "1:1 Intensivpflege";
+type CategoryFilter = "all" | "Kliniken" | "Krankenhäuser" | "Altenheim" | "1:1 Intensivpflege";
 
 export default function EmployerDashboard() {
   const navigate = useNavigate();
@@ -123,7 +123,10 @@ export default function EmployerDashboard() {
     if (categoryFilter !== "all") {
       result = result.filter(job => {
         if (categoryFilter === "Kliniken") {
-          return job.facility_type === "Klinik" || job.facility_type === "Krankenhaus";
+          return job.facility_type === "Klinik";
+        }
+        if (categoryFilter === "Krankenhäuser") {
+          return job.facility_type === "Krankenhaus";
         }
         if (categoryFilter === "Altenheim") return job.facility_type === "Altenheim";
         if (categoryFilter === "1:1 Intensivpflege") return job.facility_type === "1zu1";
@@ -487,6 +490,7 @@ export default function EmployerDashboard() {
               <SelectContent>
                 <SelectItem value="all">{t("dashboard.filter.all_categories")}</SelectItem>
                 <SelectItem value="Kliniken">{t('category.clinics')}</SelectItem>
+                <SelectItem value="Krankenhäuser">{t('category.hospitals')}</SelectItem>
                 <SelectItem value="Altenheim">{t('category.nursing_homes')}</SelectItem>
                 <SelectItem value="1:1 Intensivpflege">{t('category.intensive_care')}</SelectItem>
               </SelectContent>

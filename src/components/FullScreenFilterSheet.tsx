@@ -269,16 +269,13 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
               <div className="flex flex-wrap gap-3">
                 <PillChip
                   label={t('category.clinics')}
-                  selected={localFilters.facilities.includes('Klinik') || localFilters.facilities.includes('Krankenhaus')}
-                  onClick={() => {
-                    const hasClinics = localFilters.facilities.includes('Klinik') || localFilters.facilities.includes('Krankenhaus');
-                    setLocalFilters(prev => ({
-                      ...prev,
-                      facilities: hasClinics
-                        ? prev.facilities.filter(f => f !== 'Klinik' && f !== 'Krankenhaus')
-                        : [...prev.facilities, 'Klinik', 'Krankenhaus']
-                    }));
-                  }}
+                  selected={localFilters.facilities.includes('Klinik')}
+                  onClick={() => toggleArrayFilter('facilities', 'Klinik')}
+                />
+                <PillChip
+                  label={t('category.hospitals')}
+                  selected={localFilters.facilities.includes('Krankenhaus')}
+                  onClick={() => toggleArrayFilter('facilities', 'Krankenhaus')}
                 />
                 <PillChip
                   label={t('category.nursing_homes')}

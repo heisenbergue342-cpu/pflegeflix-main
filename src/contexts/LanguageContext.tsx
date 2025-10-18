@@ -94,6 +94,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Categories
     'category.clinics': 'Kliniken',
     'category.hospital': 'Krankenhaus',
+    'category.hospitals': 'Krankenhäuser',
     'category.nursing_homes': 'Altenheime',
     'category.intensive_care': 'Intensivpflege',
     'category.section': 'Kategorien',
@@ -888,6 +889,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Categories
     'category.clinics': 'Clinics',
     'category.hospital': 'Hospital',
+    'category.hospitals': 'Hospitals',
     'category.nursing_homes': 'Nursing Homes',
     'category.intensive_care': 'Intensive Care',
     'category.section': 'Categories',

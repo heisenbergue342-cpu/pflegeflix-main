@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Users, Heart, GripVertical } from 'lucide-react';
+import { Building2, Users, Heart, GripVertical, Hospital } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import type { Database } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,13 @@ const DEFAULT_CATEGORIES: Category[] = [
     labelEN: 'Clinics',
     icon: Building2,
     facility: 'Klinik',
+  },
+  {
+    key: 'hospitals',
+    labelDE: 'Krankenhäuser',
+    labelEN: 'Hospitals',
+    icon: Hospital,
+    facility: 'Krankenhaus',
   },
   {
     key: 'nursing_homes',
@@ -88,11 +96,19 @@ export default function CategorySlimList({ onNavigate, showHeader = true }: Cate
       const facilityCounts: Partial<Record<FacilityType, number>> = {};
       for (const category of categories) {
         if (category.key === 'clinics') {
-          const [{ count: klinikCount }, { count: krankenhausCount }] = await Promise.all([
-            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Klinik'),
-            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Krankenhaus'),
-          ]);
-          facilityCounts['Klinik'] = (klinikCount || 0) + (krankenhausCount || 0);
+          const { count } = await supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('approved', true)
+            .eq('facility_type', 'Klinik');
+          facilityCounts['Klinik'] = count || 0;
+        } else if (category.key === 'hospitals') {
+          const { count } = await supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('approved', true)
+            .eq('facility_type', 'Krankenhaus');
+          facilityCounts['Krankenhaus'] = count || 0;
         } else {
           const { count } = await supabase
             .from('jobs')
@@ -110,10 +126,10 @@ export default function CategorySlimList({ onNavigate, showHeader = true }: Cate
 
   const handleCategoryClick = (facility: FacilityType) => {
     const params = new URLSearchParams();
-    if (facility === 'Klinik') {
-      params.set('facilities', ['Klinik', 'Krankenhaus'].join(','));
-    } else {
-      params.set('facilities', facility);
+    params.set('facilities', facility);
+    // analytics for menu category click
+    if (facility === 'Krankenhaus') {
+      trackAnalyticsEvent('menu_category_click', { value: 'krankenhaeuser' });
     }
     navigate(`/search?${params.toString()}`);
     onNavigate?.();
@@ -190,6 +206,8 @@ export default function CategorySlimList({ onNavigate, showHeader = true }: Cate
           const Icon = category.icon;
           const count = category.key === 'clinics'
             ? (categoryCounts['Klinik'] || 0)
+            : category.key === 'hospitals'
+            ? (categoryCounts['Krankenhaus'] || 0)
             : (categoryCounts[category.facility] || 0);
           const label = language === 'de' ? category.labelDE : category.labelEN;
 

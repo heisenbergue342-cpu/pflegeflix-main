@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Building2, Users, Heart, ChevronLeft } from 'lucide-react';
+import { Building2, Users, Heart, ChevronLeft, Hospital } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -45,6 +45,23 @@ const CATEGORIES: Category[] = [
       { key: 'internal', labelDE: 'Internistik', labelEN: 'Internal Medicine', tag: 'Internistik' },
       { key: 'emergency', labelDE: 'Notaufnahme', labelEN: 'Emergency', tag: 'Notaufnahme' },
       { key: 'dialysis', labelDE: 'Dialyse', labelEN: 'Dialysis', tag: 'Dialyse' },
+    ],
+  },
+  {
+    key: 'hospitals',
+    labelDE: 'Krankenhäuser',
+    labelEN: 'Hospitals',
+    descDE: 'Finde Jobs in Krankenhäusern',
+    descEN: 'Find jobs in hospitals',
+    icon: Hospital,
+    facility: 'Krankenhaus',
+    subCategories: [
+      { key: 'icu_h', labelDE: 'Intensivstation', labelEN: 'ICU', tag: 'Intensivstation' },
+      { key: 'surgery_h', labelDE: 'OP/Anästhesie', labelEN: 'Surgery/Anesthesia', tag: 'OP' },
+      { key: 'chirurgie_h', labelDE: 'Chirurgie', labelEN: 'Surgery', tag: 'Chirurgie' },
+      { key: 'internal_h', labelDE: 'Internistik', labelEN: 'Internal Medicine', tag: 'Internistik' },
+      { key: 'emergency_h', labelDE: 'Notaufnahme', labelEN: 'Emergency', tag: 'Notaufnahme' },
+      { key: 'dialysis_h', labelDE: 'Dialyse', labelEN: 'Dialysis', tag: 'Dialyse' },
     ],
   },
   {
@@ -116,11 +133,19 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
       const facilityCounts: Partial<Record<FacilityType, number>> = {};
       for (const category of CATEGORIES) {
         if (category.key === 'clinics') {
-          const [{ count: klinikCount }, { count: krankenhausCount }] = await Promise.all([
-            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Klinik'),
-            supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('approved', true).eq('facility_type', 'Krankenhaus'),
-          ]);
-          facilityCounts['Klinik'] = (klinikCount || 0) + (krankenhausCount || 0);
+          const { count } = await supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('approved', true)
+            .eq('facility_type', 'Klinik');
+          facilityCounts['Klinik'] = count || 0;
+        } else if (category.key === 'hospitals') {
+          const { count } = await supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('approved', true)
+            .eq('facility_type', 'Krankenhaus');
+          facilityCounts['Krankenhaus'] = count || 0;
         } else {
           const { count } = await supabase
             .from('jobs')
@@ -141,7 +166,15 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
               .from('jobs')
               .select('*', { count: 'exact', head: true })
               .eq('approved', true)
-              .in('facility_type', ['Klinik', 'Krankenhaus'])
+              .eq('facility_type', 'Klinik')
+              .contains('tags', [sub.tag]);
+            counts[sub.key] = count || 0;
+          } else if (category.key === 'hospitals') {
+            const { count } = await supabase
+              .from('jobs')
+              .select('*', { count: 'exact', head: true })
+              .eq('approved', true)
+              .eq('facility_type', 'Krankenhaus')
               .contains('tags', [sub.tag]);
             counts[sub.key] = count || 0;
           } else {
@@ -190,7 +223,10 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
     const params = new URLSearchParams(location.search);
     const facilities = params.get('facilities')?.split(',') || [];
     if (category.key === 'clinics') {
-      return facilities.includes('Klinik') || facilities.includes('Krankenhaus');
+      return facilities.includes('Klinik');
+    }
+    if (category.key === 'hospitals') {
+      return facilities.includes('Krankenhaus');
     }
     return facilities.includes(category.facility);
   };
