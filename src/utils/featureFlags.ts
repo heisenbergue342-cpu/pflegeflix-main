@@ -21,8 +21,12 @@ const RAW_JOB_PAYWALL = import.meta.env.VITE_FEATURE_JOB_PAYWALL;
 export const JOB_PAYWALL_ENABLED: boolean =
   typeof RAW_JOB_PAYWALL === "undefined" ? true : toBool(RAW_JOB_PAYWALL);
 
-// When either launch/free mode is on OR paywall is toggled off, gating is disabled.
-export const PAYWALL_DISABLED: boolean = FREE_MODE_ACTIVE || !JOB_PAYWALL_ENABLED;
+// New: staging unlimited flag – when true, treat all employers as unlimited and hide all upsell.
+const RAW_UNLIMITED = import.meta.env.VITE_FEATURE_FREE_PLAN_UNLIMITED;
+export const FEATURE_FREE_PLAN_UNLIMITED: boolean = toBool(RAW_UNLIMITED);
+
+// When either launch/free mode is on OR paywall is toggled off OR unlimited flag is on, gating is disabled.
+export const PAYWALL_DISABLED: boolean = FEATURE_FREE_PLAN_UNLIMITED || FREE_MODE_ACTIVE || !JOB_PAYWALL_ENABLED;
 
 // Optional cap while in free/launch mode (display only; no gating enforced while PAYWALL_DISABLED)
 const RAW_MAX = import.meta.env.VITE_FREE_MODE_MAX_ACTIVE_JOBS;
