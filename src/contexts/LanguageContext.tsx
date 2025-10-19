@@ -289,6 +289,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'favorites.title': 'Gespeicherte Jobs',
     'favorites.removed': 'Job aus Favoriten entfernt',
     'favorites.saved': 'Job gespeichert',
+    'favorites.description': 'Verwalten Sie Ihre gespeicherten Jobs für später',
 
     // Footer
     'footer.company_info': 'Unternehmensangaben',
@@ -491,6 +492,45 @@ export const translations: Record<Language, Record<string, string>> = {
     'dashboard.profile_saved_description': 'Ihre Profilinformationen wurden erfolgreich aktualisiert.',
     'error.save_failed': 'Speichern fehlgeschlagen',
     'dashboard.profile_save_error': 'Fehler beim Speichern Ihrer Profilinformationen.',
+    
+    // Filters (used in LocationFilter & FullScreenFilterSheet)
+    'filter.location': 'Standort',
+    'filter.search_cities': 'Stadt suchen…',
+    'filter.remove_city': 'Stadt {city} entfernen',
+    'filter.max_cities_reached': 'Maximal 3 Städte ausgewählt',
+    'filter.city_helper': 'Wähle bis zu 3 Städte aus',
+    'filter.close_menu': 'Filtermenü schließen',
+    
+    // Saved Searches dialog (Search page)
+    'saved_searches.save_current': 'Aktuelle Suche speichern',
+    
+    // Favorites page description
+    'favorites.description': 'Verwalten Sie Ihre gespeicherten Jobs für später',
+    
+    // Job posting / filters
+    'job.field.facility_type': 'Einrichtungstyp',
+
+    // StepDetails specialty tag translations (subcategory.*)
+    'subcategory.intensivstation': 'Intensivstation',
+    'subcategory.op_anästhesie': 'OP/Anästhesie',
+    'subcategory.chirurgie': 'Chirurgie',
+    'subcategory.internistik': 'Internistik',
+    'subcategory.notaufnahme': 'Notaufnahme',
+    'subcategory.dialyse': 'Dialyse',
+    'subcategory.stationär': 'Stationär',
+    'subcategory.kurzzeitpflege': 'Kurzzeitpflege',
+    'subcategory.demenz': 'Demenz',
+    'subcategory.gerontopsychiatrie': 'Gerontopsychiatrie',
+    'subcategory.leitung': 'Leitung',
+    'subcategory.beatmung': 'Beatmung',
+    'subcategory.homecare': 'Homecare',
+    'subcategory.kinder': 'Kinder',
+    'subcategory.nacht': 'Nacht',
+    'subcategory.24h': '24 h',
+
+    // Optional nav labels (for consistency if used)
+    'nav.for_you': 'Für Dich',
+    'nav.career': 'Meine Karriere',
 
     // Legal Pages
     'legal.last_updated': 'Zuletzt aktualisiert',
@@ -1084,6 +1124,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'favorites.title': 'Saved Jobs',
     'favorites.removed': 'Job removed from favorites',
     'favorites.saved': 'Job saved',
+    'favorites.description': 'Manage the jobs you saved for later',
 
     // Footer
     'footer.company_info': 'Company Information',
@@ -1286,6 +1327,45 @@ export const translations: Record<Language, Record<string, string>> = {
     'dashboard.profile_saved_description': 'Your profile information has been successfully updated.',
     'error.save_failed': 'Save failed',
     'dashboard.profile_save_error': 'Error saving your profile information.',
+    
+    // Filters (used in LocationFilter & FullScreenFilterSheet)
+    'filter.location': 'Location',
+    'filter.search_cities': 'Search city…',
+    'filter.remove_city': 'Remove {city} city',
+    'filter.max_cities_reached': 'Maximum 3 cities selected',
+    'filter.city_helper': 'Select up to 3 cities',
+    'filter.close_menu': 'Close filter menu',
+    
+    // Saved Searches dialog (Search page)
+    'saved_searches.save_current': 'Save current search',
+    
+    // Favorites page description
+    'favorites.description': 'Manage the jobs you saved for later',
+    
+    // Job posting / filters
+    'job.field.facility_type': 'Facility Type',
+
+    // StepDetails specialty tag translations (subcategory.*)
+    'subcategory.intensivstation': 'ICU',
+    'subcategory.op_anästhesie': 'Surgery/Anesthesia',
+    'subcategory.chirurgie': 'Surgery',
+    'subcategory.internistik': 'Internal Medicine',
+    'subcategory.notaufnahme': 'Emergency',
+    'subcategory.dialyse': 'Dialysis',
+    'subcategory.stationär': 'Inpatient',
+    'subcategory.kurzzeitpflege': 'Short-term Care',
+    'subcategory.demenz': 'Dementia',
+    'subcategory.gerontopsychiatrie': 'Geriatric Psychiatry',
+    'subcategory.leitung': 'Management',
+    'subcategory.beatmung': 'Ventilation',
+    'subcategory.homecare': 'Homecare',
+    'subcategory.kinder': 'Children',
+    'subcategory.nacht': 'Night',
+    'subcategory.24h': '24 h',
+
+    // Optional nav labels (for consistency if used)
+    'nav.for_you': 'For You',
+    'nav.career': 'My Career',
 
     // Legal Pages
     'legal.last_updated': 'Last updated',
