@@ -14,7 +14,10 @@ const SPECIALTY_TAGS = [
   "Intensivstation", "OP/Anästhesie", "Chirurgie", "Internistik",
   "Notaufnahme", "Dialyse", "Stationär", "Kurzzeitpflege",
   "Demenz", "Gerontopsychiatrie", "Leitung", "Beatmung",
-  "Homecare", "Kinder", "Nacht", "24h"
+  "Homecare", "Kinder", "Nacht", "24h",
+  // New specialties & roles
+  "Ambulante Pflege", "OTA", "ATA", "Kinderpflege",
+  "Physiotherapie", "Ergotherapie", "Logopädie"
 ];
 
 export function StepDetails({ formData, updateFormData }: StepDetailsProps) {

@@ -40,6 +40,8 @@ export default function Home() {
   const nursingHomeJobs = jobs.filter(j => j.facility_type === 'Altenheim');
   const oneOnOneJobs = jobs.filter(j => j.facility_type === '1zu1');
   const nightPartTimeJobs = jobs.filter(j => j.shift_type?.includes('Nacht') || j.contract_type === 'Teilzeit');
+  // New: Outpatient Care jobs based on tag
+  const outpatientJobs = jobs.filter(j => Array.isArray(j.tags) && j.tags.includes('Ambulante Pflege'));
 
   // Convert recommended jobs to full job objects
   const personalizedJobs = recommendedJobs
@@ -132,6 +134,12 @@ export default function Home() {
             <div className="min-h-[320px]">
               <JobCarousel title={t('carousel.nursing_homes')} jobs={nursingHomeJobs} />
             </div>
+            {/* New Outpatient Care carousel */}
+            {outpatientJobs.length > 0 && (
+              <div className="min-h-[320px]">
+                <JobCarousel title={t('category.outpatient')} jobs={outpatientJobs} />
+              </div>
+            )}
             <div className="min-h-[320px]">
               <JobCarousel title={t('carousel.one_on_one')} jobs={oneOnOneJobs} />
             </div>

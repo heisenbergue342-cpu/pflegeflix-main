@@ -97,6 +97,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'category.hospitals': 'Krankenhäuser',
     'category.nursing_homes': 'Altenheime',
     'category.intensive_care': 'Intensivpflege',
+    'category.outpatient': 'Ambulante Pflege',
     'category.section': 'Kategorien',
     'category.back': 'Zurück',
     'category.edit_order': 'Reihenfolge bearbeiten',
@@ -541,6 +542,13 @@ export const translations: Record<Language, Record<string, string>> = {
     'subcategory.kinder': 'Kinder',
     'subcategory.nacht': 'Nacht',
     'subcategory.24h': '24 h',
+    'subcategory.ambulante_pflege': 'Ambulante Pflege',
+    'subcategory.ota': 'Operationstechnische Assistenz (OTA)',
+    'subcategory.ata': 'Anästhesietechnische Assistenz (ATA)',
+    'subcategory.kinderpflege': 'Kinderpflege',
+    'subcategory.physiotherapie': 'Physiotherapie',
+    'subcategory.ergotherapie': 'Ergotherapie',
+    'subcategory.logopädie': 'Logopädie',
 
     // Optional nav labels (for consistency if used)
     'nav.for_you': 'Für Dich',
@@ -946,6 +954,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'category.hospitals': 'Hospitals',
     'category.nursing_homes': 'Nursing Homes',
     'category.intensive_care': 'Intensive Care',
+    'category.outpatient': 'Outpatient Care',
     'category.section': 'Categories',
     'category.back': 'Back',
     'category.edit_order': 'Edit order',
@@ -1390,6 +1399,13 @@ export const translations: Record<Language, Record<string, string>> = {
     'subcategory.kinder': 'Children',
     'subcategory.nacht': 'Night',
     'subcategory.24h': '24 h',
+    'subcategory.ambulante_pflege': 'Outpatient Care',
+    'subcategory.ota': 'Surgical Technologist (OTA)',
+    'subcategory.ata': 'Anesthesia Technologist (ATA)',
+    'subcategory.kinderpflege': "Children's Nursing",
+    'subcategory.physiotherapie': 'Physiotherapy',
+    'subcategory.ergotherapie': 'Occupational Therapy',
+    'subcategory.logopädie': 'Speech Therapy',
 
     // Optional nav labels (for consistency if used)
     'nav.for_you': 'For You',
