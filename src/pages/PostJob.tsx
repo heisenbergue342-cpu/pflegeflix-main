@@ -29,6 +29,8 @@ export default function PostJob() {
   const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
   // Track when we are editing an existing job (not a draft)
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  // New: track whether we're still loading draft/job information (to avoid showing paywall prematurely)
+  const [loadingDraftOrJob, setLoadingDraftOrJob] = useState<boolean>(!!draftId);
   const [formData, setFormData] = useState<any>({
     title: "",
     facility_id: null,
@@ -114,7 +116,10 @@ export default function PostJob() {
   // Load draft or existing job (edit mode)
   useEffect(() => {
     const loadDraftOrJob = async () => {
-      if (!draftId) return;
+      if (!draftId) {
+        setLoadingDraftOrJob(false);
+        return;
+      }
 
       // Try loading as draft first
       const { data: draft } = await supabase
@@ -126,6 +131,7 @@ export default function PostJob() {
       if (draft) {
         setFormData(draft);
         setCurrentStep(draft.step || 1);
+        setLoadingDraftOrJob(false);
         return;
       }
 
@@ -162,6 +168,7 @@ export default function PostJob() {
         });
         setCurrentStep(1);
         trackAnalyticsEvent('job_edit_opened', { jobId: job.id });
+        setLoadingDraftOrJob(false);
         return;
       }
 
@@ -170,6 +177,7 @@ export default function PostJob() {
         title: t("error.load_failed"),
         variant: "destructive",
       });
+      setLoadingDraftOrJob(false);
     };
 
     loadDraftOrJob();
@@ -478,7 +486,7 @@ export default function PostJob() {
   };
 
   // Show permission error if user can't access
-  if (canPost === null) {
+  if (canPost === null || loadingDraftOrJob) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">Loading...</div>
