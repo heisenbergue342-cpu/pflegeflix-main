@@ -14,6 +14,7 @@ import CookieConsent from "./components/CookieConsent";
 import A11yProvider from "./components/A11yProvider";
 import WebVitals from "./components/WebVitals";
 import { OrganizationStructuredData } from "./components/StructuredData";
+import NotAuthorized from "./pages/NotAuthorized";
 
 // Code-split lazy loaded pages
 const Auth = lazy(() => import("./pages/Auth"));
