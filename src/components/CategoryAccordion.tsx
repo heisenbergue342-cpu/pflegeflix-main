@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Building2, Users, Heart, ChevronLeft, Hospital } from 'lucide-react';
+import { Building2, Users, Heart, ChevronLeft, Hospital, Home as HomeIcon } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
@@ -25,7 +25,9 @@ interface Category {
   descDE: string;
   descEN: string;
   icon: any;
-  facility: FacilityType;
+  facility?: FacilityType;
+  tagBased?: boolean;
+  tagValue?: string;
   subCategories: SubCategory[];
 }
 
@@ -96,6 +98,17 @@ const CATEGORIES: Category[] = [
       { key: '24h', labelDE: '24 h', labelEN: '24 h', tag: '24h' },
     ],
   },
+  {
+    key: 'outpatient',
+    labelDE: 'Ambulante Pflege',
+    labelEN: 'Outpatient Care',
+    descDE: 'Pflege im häuslichen Umfeld und ambulante Dienste.',
+    descEN: 'Home care and outpatient services.',
+    icon: HomeIcon,
+    tagBased: true,
+    tagValue: 'Ambulante Pflege',
+    subCategories: []
+  },
 ];
 
 const STORAGE_KEY = 'pflegeflix_category_last_opened';
@@ -146,18 +159,28 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
             .eq('approved', true)
             .eq('facility_type', 'Krankenhaus');
           facilityCounts['Krankenhaus'] = count || 0;
+        } else if (category.tagBased && category.tagValue) {
+          const { count } = await supabase
+            .from('jobs')
+            .select('*', { count: 'exact', head: true })
+            .eq('approved', true)
+            .contains('tags', [category.tagValue]);
+          // store under a pseudo key; we will read it by category.tagValue
+          // no direct FacilityType key for tag-based category
+          // we'll read counts inline when rendering
+          facilityCounts[category.tagValue as FacilityType] = count || 0 as any;
         } else {
           const { count } = await supabase
             .from('jobs')
             .select('*', { count: 'exact', head: true })
             .eq('approved', true)
-            .eq('facility_type', category.facility);
-          facilityCounts[category.facility] = count || 0;
+            .eq('facility_type', category.facility as FacilityType);
+          facilityCounts[category.facility as FacilityType] = count || 0;
         }
       }
       setCategoryCounts(facilityCounts as Record<FacilityType, number>);
 
-      // Subcategory counts (unchanged logic but clinics query includes both facility types)
+      // Subcategory counts
       const counts: Record<string, number> = {};
       for (const category of CATEGORIES) {
         for (const sub of category.subCategories) {
@@ -177,12 +200,19 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
               .eq('facility_type', 'Krankenhaus')
               .contains('tags', [sub.tag]);
             counts[sub.key] = count || 0;
+          } else if (category.tagBased && category.tagValue) {
+            const { count } = await supabase
+              .from('jobs')
+              .select('*', { count: 'exact', head: true })
+              .eq('approved', true)
+              .contains('tags', [sub.tag || category.tagValue]);
+            counts[sub.key] = count || 0;
           } else {
             const { count } = await supabase
               .from('jobs')
               .select('*', { count: 'exact', head: true })
               .eq('approved', true)
-              .eq('facility_type', category.facility)
+              .eq('facility_type', category.facility as FacilityType)
               .contains('tags', [sub.tag]);
             counts[sub.key] = count || 0;
           }
@@ -267,7 +297,9 @@ export default function CategoryAccordion({ onNavigate }: CategoryAccordionProps
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 px-4 pb-4">
           {CATEGORIES.map((category, index) => {
             const Icon = category.icon;
-            const count = categoryCounts[category.facility] || 0;
+            const count = category.tagBased && category.tagValue
+              ? (categoryCounts[category.tagValue as FacilityType] || 0)
+              : (categoryCounts[category.facility as FacilityType] || 0);
             const isActive = isParentActive(category);
             const label = language === 'de' ? category.labelDE : category.labelEN;
             const desc = language === 'de' ? category.descDE : category.descEN;

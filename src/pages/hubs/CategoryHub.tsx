@@ -5,16 +5,16 @@ import { supabase } from '@/integrations/supabase/client';
 import SEO from '@/components/SEO';
 import JobCard from '@/components/JobCard';
 import { Card } from '@/components/ui/card';
-import { Building2, Users, Heart } from 'lucide-react';
+import { Building2, Users, Heart, Home as HomeIcon } from 'lucide-react';
 
-type CategorySlug = 'kliniken' | 'altenheime' | 'intensivpflege' | 'kliniken-und-krankenhaeuser';
+type CategorySlug = 'kliniken' | 'altenheime' | 'intensivpflege' | 'kliniken-und-krankenhaeuser' | 'ambulante-pflege';
 
 const CATEGORY_META: Record<CategorySlug, {
   titleDE: string;
   titleEN: string;
   descDE: string;
   descEN: string;
-  facilities: FacilityType[] | FacilityType;
+  facilities: any;
   Icon: any;
 }> = {
   'kliniken': {
@@ -48,6 +48,14 @@ const CATEGORY_META: Record<CategorySlug, {
     descEN: 'Redirect to Clinics.',
     facilities: ['Klinik', 'Krankenhaus'],
     Icon: Building2
+  },
+  'ambulante-pflege': {
+    titleDE: 'Ambulante Pflege Jobs',
+    titleEN: 'Outpatient Care Jobs',
+    descDE: 'Pflegeeinsätze im häuslichen Umfeld und ambulanten Diensten.',
+    descEN: 'Home and outpatient nursing roles.',
+    facilities: null, // tag-based filtering handled in fetch
+    Icon: HomeIcon
   }
 };
 
@@ -64,19 +72,31 @@ export default function CategoryHub() {
   useEffect(() => {
     const fetchJobs = async () => {
       setLoading(true);
-      const facilities = Array.isArray(meta.facilities) ? meta.facilities : [meta.facilities];
-      let query = supabase.from('jobs').select('*').eq('approved', true);
-      if (facilities.length > 1) {
-        query = query.in('facility_type', facilities as any);
+      let data: any[] | null = null;
+      if (slug === 'ambulante-pflege') {
+        const { data: tagJobs } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('approved', true)
+          .contains('tags', ['Ambulante Pflege'])
+          .order('posted_at', { ascending: false });
+        data = tagJobs || [];
       } else {
-        query = query.eq('facility_type', facilities[0]);
+        const facilities = Array.isArray(meta.facilities) ? meta.facilities : [meta.facilities];
+        let query = supabase.from('jobs').select('*').eq('approved', true);
+        if (facilities.length > 1) {
+          query = query.in('facility_type', facilities as any);
+        } else {
+          query = query.eq('facility_type', facilities[0]);
+        }
+        const { data: facilityJobs } = await query.order('posted_at', { ascending: false });
+        data = facilityJobs || [];
       }
-      const { data } = await query.order('posted_at', { ascending: false });
       setJobs(data || []);
       setLoading(false);
     };
     fetchJobs();
-  }, [meta.facilities]);
+  }, [meta.facilities, slug]);
 
   return (
     <div className="min-h-screen bg-netflix-bg">

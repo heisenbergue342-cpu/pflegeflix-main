@@ -115,6 +115,7 @@ Deno.serve(async (req) => {
       { slug: 'kliniken' },
       { slug: 'altenheime' },
       { slug: 'intensivpflege' },
+      { slug: 'ambulante-pflege' },
     ];
     categoryHubs.forEach(({ slug }) => {
       sitemap += `  <url>

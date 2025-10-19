@@ -26,7 +26,7 @@ import SEO from "@/components/SEO";
 type ViewMode = "table" | "grid";
 type SortBy = "newest" | "applications" | "views";
 type StatusFilter = "all" | "draft" | "online" | "paused" | "closed" | "expired";
-type CategoryFilter = "all" | "Kliniken" | "Krankenhäuser" | "Altenheim" | "1:1 Intensivpflege";
+type CategoryFilter = "all" | "Kliniken" | "Krankenhäuser" | "Altenheim" | "1:1 Intensivpflege" | "Ambulante Pflege";
 
 export default function EmployerDashboard() {
   const navigate = useNavigate();
@@ -130,6 +130,7 @@ export default function EmployerDashboard() {
         }
         if (categoryFilter === "Altenheim") return job.facility_type === "Altenheim";
         if (categoryFilter === "1:1 Intensivpflege") return job.facility_type === "1zu1";
+        if (categoryFilter === "Ambulante Pflege") return Array.isArray(job.tags) && job.tags.includes("Ambulante Pflege");
         return true;
       });
     }
@@ -502,6 +503,7 @@ export default function EmployerDashboard() {
                 <SelectItem value="Krankenhäuser">{t('category.hospitals')}</SelectItem>
                 <SelectItem value="Altenheim">{t('category.nursing_homes')}</SelectItem>
                 <SelectItem value="1:1 Intensivpflege">{t('category.intensive_care')}</SelectItem>
+                <SelectItem value="Ambulante Pflege">{t('category.outpatient')}</SelectItem>
               </SelectContent>
             </Select>
 

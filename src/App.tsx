@@ -92,6 +92,7 @@ const App = () => (
                 
                 <Route path="/jobs/kliniken" element={<CategoryHub />} />
                 <Route path="/jobs/altenheime" element={<CategoryHub />} />
+                <Route path="/jobs/ambulante-pflege" element={<CategoryHub />} />
                 
                 {/* Redirect old category slug to new routes */}
                 <Route path="/jobs/category/kliniken-und-krankenhaeuser" element={<Navigate replace to="/jobs/kliniken" />} />

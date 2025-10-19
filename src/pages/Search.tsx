@@ -102,6 +102,10 @@ export default function Search() {
       .eq('approved', true)
       .order('posted_at', { ascending: false });
 
+    // Special handling: 'Ambulante Pflege' filters by tag instead of facility_type
+    const includesOutpatient = filters.facilities.includes('Ambulante Pflege');
+    const facilityTypes = filters.facilities.filter(f => f !== 'Ambulante Pflege');
+
     if (searchQuery) {
       query = query.or(`title.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
     }
@@ -109,8 +113,11 @@ export default function Search() {
     if (filters.cities.length > 0) {
       query = query.in('city', filters.cities);
     }
-    if (filters.facilities.length > 0) {
-      query = query.in('facility_type', filters.facilities as any);
+    if (facilityTypes.length > 0) {
+      query = query.in('facility_type', facilityTypes as any);
+    }
+    if (includesOutpatient) {
+      query = query.contains('tags', ['Ambulante Pflege']);
     }
     if (filters.contracts.length > 0) {
       query = query.in('contract_type', filters.contracts as any);
@@ -173,7 +180,11 @@ export default function Search() {
     
     // Track analytics event (consent-aware)
     import('@/hooks/useAnalytics').then(({ trackAnalyticsEvent }) => {
-      trackAnalyticsEvent('filter_applied', { activeFilters: activeFilterCount + 0 });
+      const payload: any = { activeFilters: activeFilterCount + 0 };
+      if (newFilters.facilities.includes('Ambulante Pflege')) {
+        payload.category = 'ambulant';
+      }
+      trackAnalyticsEvent('filter_applied', payload);
     });
     
     // Restore scroll position after applying filters
@@ -297,6 +308,7 @@ export default function Search() {
                   : f === 'Krankenhaus' ? t('category.hospitals')
                   : f === 'Altenheim' ? t('category.nursing_homes')
                   : f === '1zu1' ? t('category.intensive_care')
+                  : f === 'Ambulante Pflege' ? t('category.outpatient')
                   : f}
                 <button
                   onClick={() => removeFilter('facilities', f)}

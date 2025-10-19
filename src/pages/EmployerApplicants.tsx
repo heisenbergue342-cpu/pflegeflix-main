@@ -116,7 +116,7 @@ export default function EmployerApplicants() {
       .from('applications')
       .select(`
         *,
-        jobs!inner(id, title, city, state, facility_type, owner_id),
+        jobs!inner(id, title, city, state, facility_type, owner_id, tags),
         profiles!inner(id, name, email, city)
       `)
       .eq('jobs.owner_id', user?.id)
@@ -441,6 +441,13 @@ export default function EmployerApplicants() {
                           <div className="text-sm text-muted-foreground">
                             {applicant.jobs.city}, {applicant.jobs.state}
                           </div>
+                          {Array.isArray(applicant.jobs?.tags) && applicant.jobs.tags.includes('Ambulante Pflege') && (
+                            <div className="mt-1">
+                              <Badge variant="outline" className="bg-white/5 text-white border-white/10">
+                                {t('category.outpatient')}
+                              </Badge>
+                            </div>
+                          )}
                         </td>
                         <td className="p-4">
                           <Badge className={`border ${getStageColor(applicant.stage)}`}>

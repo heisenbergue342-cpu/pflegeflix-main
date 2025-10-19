@@ -42,7 +42,20 @@ export function StepBasics({ formData, updateFormData, isEditing, editingJobId }
           <Label htmlFor="facility_type">{t("job.field.category")} *</Label>
           <Select
             value={formData.facility_type || ""}
-            onValueChange={(value) => updateFormData({ facility_type: value === 'Kliniken' ? 'Klinik' : value === 'Krankenhäuser' ? 'Krankenhaus' : value })}
+            onValueChange={(value) => {
+              if (value === 'Kliniken') {
+                updateFormData({ facility_type: 'Klinik' });
+              } else if (value === 'Krankenhäuser') {
+                updateFormData({ facility_type: 'Krankenhaus' });
+              } else if (value === 'Ambulante Pflege') {
+                // Use a valid facility type (e.g., Klinik) and attach the category tag
+                const nextTags = Array.isArray(formData.tags) ? [...formData.tags] : [];
+                if (!nextTags.includes('Ambulante Pflege')) nextTags.push('Ambulante Pflege');
+                updateFormData({ facility_type: formData.facility_type || 'Klinik', tags: nextTags });
+              } else {
+                updateFormData({ facility_type: value });
+              }
+            }}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder={t("job.field.category_placeholder")} />
@@ -52,6 +65,7 @@ export function StepBasics({ formData, updateFormData, isEditing, editingJobId }
               <SelectItem value="Krankenhäuser">{t("category.hospitals")}</SelectItem>
               <SelectItem value="Altenheim">{t("category.nursing_homes")}</SelectItem>
               <SelectItem value="1zu1">{t("category.intensive_care")}</SelectItem>
+              <SelectItem value="Ambulante Pflege">{t("category.outpatient")}</SelectItem>
             </SelectContent>
           </Select>
         </div>

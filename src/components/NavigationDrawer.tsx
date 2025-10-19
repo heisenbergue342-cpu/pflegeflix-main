@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import CategorySlimList from '@/components/CategorySlimList';
+import { Home as HomeIcon } from 'lucide-react';
 import {
   Drawer,
   DrawerClose,
@@ -33,6 +34,7 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
   const location = useLocation();
   const [savedCount, setSavedCount] = useState(0);
   const [applicationsCount, setApplicationsCount] = useState(0);
+  const [outpatientCount, setOutpatientCount] = useState(0);
   const [switchingRole, setSwitchingRole] = useState(false);
   
   // Persisted collapsible states
@@ -95,6 +97,24 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
       supabase.removeChannel(appsChannel);
     };
   }, [user]);
+
+  // Fetch outpatient count
+  useEffect(() => {
+    const fetchOutpatientCount = async () => {
+      const { count } = await supabase
+        .from('jobs')
+        .select('*', { count: 'exact', head: true })
+        .eq('approved', true)
+        .contains('tags', ['Ambulante Pflege']);
+      setOutpatientCount(count || 0);
+    };
+    fetchOutpatientCount();
+    const channel = supabase
+      .channel('outpatient_count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'jobs' }, fetchOutpatientCount)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   // Close drawer on route change
   useEffect(() => {
@@ -325,6 +345,24 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2">
               <CategorySlimList onNavigate={() => onOpenChange(false)} showHeader={false} />
+              <Link
+                to="/jobs/ambulante-pflege"
+                className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-all duration-200 group relative w-full text-left ${
+                  isActive('/jobs/ambulante-pflege')
+                    ? 'bg-netflix-card text-netflix-text font-medium border-l-3 border-netflix-red'
+                    : 'text-netflix-text-muted hover:text-netflix-text hover:bg-netflix-card/50'
+                }`}
+                aria-label={t('category.outpatient')}
+                onClick={() => onOpenChange(false)}
+              >
+                <HomeIcon className="w-4 h-4" aria-hidden="true" />
+                <span className="flex-1 text-sm">{t('category.outpatient')}</span>
+                {outpatientCount > 0 && (
+                  <Badge variant="secondary" className="bg-netflix-red text-white text-xs px-1.5 py-0 h-5 min-w-[20px]">
+                    {outpatientCount}
+                  </Badge>
+                )}
+              </Link>
             </CollapsibleContent>
           </Collapsible>
 
