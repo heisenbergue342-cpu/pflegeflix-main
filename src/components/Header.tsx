@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import NavigationDrawer from '@/components/NavigationDrawer';
 
 export default function Header() {
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -40,40 +39,9 @@ export default function Header() {
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6" role="navigation" aria-label="Main navigation">
-            <Link
-              to="/search"
-              className="flex items-center gap-2 text-netflix-text-muted hover:text-netflix-text transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 rounded"
-              aria-label={t('nav.search')}
-            >
-              <Search className="w-4 h-4" aria-hidden="true" />
-              {t('nav.search')}
-            </Link>
-          </nav>
+          {/* Intentionally empty on desktop: Search and language are available in the Menu and Footer. */}
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 text-sm" role="group" aria-label="Language selection">
-              <button
-                onClick={() => setLanguage('de')}
-                aria-label="Switch to German"
-                aria-pressed={language === 'de'}
-                aria-live="polite"
-                className={`px-2 py-1 rounded transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 ${language === 'de' ? 'bg-netflix-red text-white' : 'text-netflix-text-muted hover:text-netflix-text'}`}
-              >
-                DE
-              </button>
-              <span className="text-netflix-text-muted" aria-hidden="true">|</span>
-              <button
-                onClick={() => setLanguage('en')}
-                aria-label="Switch to English"
-                aria-pressed={language === 'en'}
-                aria-live="polite"
-                className={`px-2 py-1 rounded transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 ${language === 'en' ? 'bg-netflix-red text-white' : 'text-netflix-text-muted hover:text-netflix-text'}`}
-              >
-                EN
-              </button>
-            </div>
-            
             {user ? (
               <Button 
                 onClick={handleSignOut} 

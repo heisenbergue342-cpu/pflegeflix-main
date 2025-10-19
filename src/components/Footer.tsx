@@ -3,9 +3,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useState, useEffect } from "react";
 import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from '@/components/ui/button';
 
 export default function Footer() {
   const { t, language } = useLanguage();
+  const { setLanguage } = useLanguage();
   const location = useLocation();
   const [legalData, setLegalData] = useState<{ [key: string]: string }>({});
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -264,6 +266,29 @@ export default function Footer() {
             <p className="text-sm text-netflix-text-muted text-center md:text-right">
               {companyAddress}
             </p>
+            {/* Language switcher in footer for easy access on all viewports */}
+            <div className="mt-3 md:mt-0 flex items-center gap-2">
+              <Button
+                onClick={() => setLanguage('de')}
+                variant={language === 'de' ? 'default' : 'outline'}
+                size="sm"
+                className={`h-8 text-xs ${language === 'de' ? 'bg-netflix-red hover:bg-netflix-red-dark' : 'border-netflix-card text-netflix-text-muted'}`}
+                aria-label="Zu Deutsch wechseln"
+                aria-pressed={language === 'de'}
+              >
+                DE
+              </Button>
+              <Button
+                onClick={() => setLanguage('en')}
+                variant={language === 'en' ? 'default' : 'outline'}
+                size="sm"
+                className={`h-8 text-xs ${language === 'en' ? 'bg-netflix-red hover:bg-netflix-red-dark' : 'border-netflix-card text-netflix-text-muted'}`}
+                aria-label="Switch to English"
+                aria-pressed={language === 'en'}
+              >
+                EN
+              </Button>
+            </div>
           </div>
         </div>
       </div>
