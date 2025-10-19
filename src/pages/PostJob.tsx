@@ -15,7 +15,7 @@ import { StepApplication } from "@/components/post-job/StepApplication";
 import { StepPreview } from "@/components/post-job/StepPreview";
 import SEO from "@/components/SEO";
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
-import { FREE_MODE_ACTIVE, FREE_MODE_MAX_ACTIVE_JOBS } from '@/utils/featureFlags';
+import { PAYWALL_DISABLED, FREE_MODE_MAX_ACTIVE_JOBS } from '@/utils/featureFlags';
 
 export default function PostJob() {
   const { draftId } = useParams();
@@ -65,12 +65,12 @@ export default function PostJob() {
         return;
       }
 
-      // During launch free mode, skip subscription/plan checks entirely
-      if (FREE_MODE_ACTIVE) {
+      // If paywall is disabled, skip all subscription/plan checks
+      if (PAYWALL_DISABLED) {
         setCanPost(true);
         setSubscriptionInfo({
           plan: {
-            name: "Free Mode",
+            name: "Launch (Free)",
             max_active_jobs: FREE_MODE_MAX_ACTIVE_JOBS,
           },
         });
@@ -90,7 +90,6 @@ export default function PostJob() {
           return;
         }
 
-        // Get subscription info first
         const { data: subData } = await supabase
           .from("employer_subscriptions")
           .select(`*, plan:subscription_plans(*)`)
@@ -99,13 +98,12 @@ export default function PostJob() {
 
         setSubscriptionInfo(subData || null);
 
-        // Only check posting limit for create flows; edits will bypass this later
+        // Only for create flows (edits bypass later)
         const { data: canPostData } = await supabase
           .rpc("can_employer_post_job", { employer_id: user.id });
 
         setCanPost(canPostData === true);
       } catch (_e) {
-        // Fallback to allowing if check fails
         setCanPost(true);
       }
     };
@@ -353,7 +351,6 @@ export default function PostJob() {
         salary_unit: formData.salary_unit,
         contract_type: formData.contract_type,
         featured: formData.featured,
-        // Keep owner_id and other system fields unchanged
       };
 
       const { error: updateError } = await supabase
@@ -362,10 +359,7 @@ export default function PostJob() {
         .eq("id", editingJobId);
 
       if (updateError) {
-        toast({
-          title: t("error.update_failed"),
-          variant: "destructive",
-        });
+        toast({ title: t("error.update_failed"), variant: "destructive" });
         return;
       }
 
@@ -376,8 +370,8 @@ export default function PostJob() {
       return;
     }
 
-    // Create flow: Only honor slot checks when not in free mode
-    if (!FREE_MODE_ACTIVE) {
+    // Create flow: only check slots if paywall is active
+    if (!PAYWALL_DISABLED) {
       const { data: canPostData } = await supabase
         .rpc("can_employer_post_job", { employer_id: user.id });
 
@@ -387,7 +381,6 @@ export default function PostJob() {
           description: t("error.upgrade_subscription") || "Please upgrade your subscription to post more jobs.",
           variant: "destructive",
         });
-        // For telemetry
         trackAnalyticsEvent('paywall_shown', { reason: 'no_slots' });
         return;
       }
@@ -428,7 +421,7 @@ export default function PostJob() {
       return;
     }
 
-    // Move uploaded photos and metadata from drafts/{draftId} to jobs/{newJob.id}
+    // Move photos/metadata from drafts/{draftId} to jobs/{newJob.id}
     if (draftId && newJob?.id) {
       const BUCKET = "job-photos";
       const fromFolder = `drafts/${draftId}`;
@@ -450,7 +443,6 @@ export default function PostJob() {
       }
     }
 
-    // Delete draft if exists
     if (draftId) {
       await supabase.from("draft_jobs").delete().eq("id", draftId);
     }
@@ -462,7 +454,7 @@ export default function PostJob() {
       newJob.facility_type === 'Altenheim' ? 'Altenheime' :
       newJob.facility_type === '1zu1' ? '1:1 Intensivpflege' :
       'Kliniken';
-    trackAnalyticsEvent('job_post_published', { jobId: newJob.id, category });
+    trackAnalyticsEvent('job_created', { jobId: newJob.id, category });
     await supabase.functions.invoke('ping-search-engines', {
       body: { sitemapUrl: 'https://pflegeflix.lovable.app/sitemap.xml' }
     });
@@ -562,8 +554,8 @@ export default function PostJob() {
     );
   }
 
-  // Show empty state if no posting slots available (create-only; hide during free mode or when editing existing job)
-  if (!FREE_MODE_ACTIVE && canPost === false && !editingJobId) {
+  // Show paywall ONLY when active, not editing, and slots unavailable
+  if (!PAYWALL_DISABLED && canPost === false && !editingJobId) {
     return (
       <div className="min-h-screen bg-background pt-20 pb-8">
         <div className="container max-w-4xl mx-auto px-4">
@@ -588,6 +580,7 @@ export default function PostJob() {
                 )
               </p>
             )}
+            {/* Upgrade CTAs hidden in launch mode; shown only when PAYWALL_DISABLED is false */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg">
                 <Link to="/employer/settings">

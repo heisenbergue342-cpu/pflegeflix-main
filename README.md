@@ -117,6 +117,26 @@ When Launch Free Mode is enabled:
 
 Turn it off by setting VITE_LAUNCH_FREE_MODE=false and restarting.
 
+## Launch gating toggle
+
+To disable all subscription/paywall gates during launch, set:
+
+- VITE_FEATURE_JOB_PAYWALL=false
+- (optional) VITE_LAUNCH_FREE_MODE=true
+- (optional) VITE_FREE_MODE_MAX_ACTIVE_JOBS=20
+
+Effects:
+- Employers can create, edit, republish, pause/unpause, and duplicate jobs without paywalls.
+- "Upgrade" modals/CTAs are hidden while the toggle is off.
+- Set VITE_FEATURE_JOB_PAYWALL=true later to restore create-only slot checks.
+
+## Photo uploader (Post Job – Step 1)
+
+- Localized labels (DE/EN): Upload photos, Up to 5 images (JPG/PNG/WebP), max 5 MB each.
+- Upload up to 5 photos; PNG/JPG are converted to WebP client-side for faster delivery.
+- Shows progress, thumbnails, counter (e.g., 2/5), and actions to delete/reorder.
+- Images persist in Supabase Storage (public URLs) and appear in the job detail gallery.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

@@ -6,9 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { X, UploadCloud, ArrowUpCircle, Move } from "lucide-react";
+import { X, UploadCloud, ArrowUpCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 type UploadedPhoto = {
   name: string;
@@ -36,6 +37,7 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [progress, setProgress] = useState<number>(0);
   const dragSrcIndex = useRef<number | null>(null);
 
   const basePath = useMemo(() => {
@@ -92,12 +94,45 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basePath]);
 
-  const getImageDimensions = (url: string) =>
-    new Promise<{ width: number; height: number }>((resolve) => {
+  const getImageDimensionsFromBlob = (blob: Blob): Promise<{ width: number; height: number }> =>
+    new Promise((resolve) => {
+      const url = URL.createObjectURL(blob);
       const img = new Image();
-      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.onload = () => {
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+        URL.revokeObjectURL(url);
+      };
       img.src = url;
     });
+
+  const fileToDataURL = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const convertToWebP = async (file: File): Promise<Blob> => {
+    if (file.type === "image/webp") return file;
+    const dataUrl = await fileToDataURL(file);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    await new Promise<void>((res, rej) => {
+      img.onload = () => res();
+      img.onerror = rej;
+      img.src = dataUrl;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    ctx?.drawImage(img, 0, 0);
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/webp", 0.85)
+    );
+    return blob || file;
+  };
 
   const validateFiles = (files: File[]) => {
     for (const file of files) {
@@ -123,21 +158,34 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     if (!validateFiles(filesArr)) return;
 
     setUploading(true);
+    setProgress(0);
+
     const newPhotos: UploadedPhoto[] = [];
-    for (const file of filesArr) {
-      const ext = file.name.split(".").pop() || "jpg";
+    for (let i = 0; i < filesArr.length; i++) {
+      const file = filesArr[i];
+
+      // Step 1: convert (or pass-through)
+      setProgress(Math.round(((i + 0.2) / filesArr.length) * 100));
+      const processedBlob = await convertToWebP(file);
+
+      // Step 2: upload
+      const ext = "webp";
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const path = `${basePath}/${filename}`;
-      const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+      setProgress(Math.round(((i + 0.5) / filesArr.length) * 100));
+      const { error } = await supabase.storage.from(BUCKET).upload(path, processedBlob, {
         cacheControl: "3600",
         upsert: false,
+        contentType: "image/webp",
       });
       if (error) {
         toast.error(t("common.upload_error_network"));
         continue;
       }
+
+      // Step 3: public URL + dimensions
       const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-      const dims = await getImageDimensions(publicUrl);
+      const dims = await getImageDimensionsFromBlob(processedBlob);
       newPhotos.push({
         name: filename,
         path,
@@ -145,7 +193,9 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
         width: dims.width,
         height: dims.height,
       });
+      setProgress(Math.round(((i + 1) / filesArr.length) * 100));
     }
+
     const updated = [...photos, ...newPhotos].slice(0, MAX_FILES);
     if (updated.length) {
       updated.forEach((p, i) => (p.isCover = i === 0));
@@ -242,6 +292,13 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
           {dragActive ? "Drop to upload" : "Drag & drop images here"}
         </span>
       </div>
+
+      {uploading && (
+        <div className="space-y-2">
+          <Progress value={progress} />
+          <p className="text-xs text-muted-foreground">{progress}%</p>
+        </div>
+      )}
 
       {photos.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
