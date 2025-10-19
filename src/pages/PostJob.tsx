@@ -16,6 +16,7 @@ import { StepPreview } from "@/components/post-job/StepPreview";
 import SEO from "@/components/SEO";
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { PAYWALL_DISABLED, FREE_MODE_MAX_ACTIVE_JOBS } from '@/utils/featureFlags';
+import UpgradePromptModal from "@/components/employer/UpgradePromptModal";
 
 export default function PostJob() {
   const { draftId } = useParams();
@@ -31,6 +32,9 @@ export default function PostJob() {
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   // New: track whether we're still loading draft/job information (to avoid showing paywall prematurely)
   const [loadingDraftOrJob, setLoadingDraftOrJob] = useState<boolean>(!!draftId);
+  // Gentle upgrade modal when attempting to exceed limit
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const FREE_PLAN_ACTIVE_LIMIT = 20;
   const [formData, setFormData] = useState<any>({
     title: "",
     facility_id: null,
@@ -97,6 +101,12 @@ export default function PostJob() {
           .maybeSingle();
 
         setSubscriptionInfo(subData || null);
+
+        // For Free plan, allow entering the wizard; enforce limit only on publish
+        if (subData?.plan?.name === "Free") {
+          setCanPost(true);
+          return;
+        }
 
         // Only for create flows (edits bypass later)
         const { data: canPostData } = await supabase
@@ -370,19 +380,35 @@ export default function PostJob() {
       return;
     }
 
-    // Create flow: only check slots if paywall is active
+    // Create flow: enforce Free plan limit locally; otherwise use server RPC
     if (!PAYWALL_DISABLED) {
-      const { data: canPostData } = await supabase
-        .rpc("can_employer_post_job", { employer_id: user.id });
+      // Count current active jobs for this employer
+      const { count: activeCount } = await supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("owner_id", user.id)
+        .eq("is_active", true)
+        .is("closed_at", null);
 
-      if (!canPostData) {
-        toast({
-          title: t("error.posting_limit_reached") || "Posting limit reached",
-          description: t("error.upgrade_subscription") || "Please upgrade your subscription to post more jobs.",
-          variant: "destructive",
-        });
-        trackAnalyticsEvent('paywall_shown', { reason: 'no_slots' });
-        return;
+      const isFreePlan = subscriptionInfo?.plan?.name === "Free";
+      if (isFreePlan) {
+        if ((activeCount || 0) >= FREE_PLAN_ACTIVE_LIMIT) {
+          setUpgradeModalOpen(true);
+          trackAnalyticsEvent("limit_block_publish", { context: "publish", activeCount: activeCount || 0, limit: FREE_PLAN_ACTIVE_LIMIT });
+          return;
+        }
+      } else {
+        const { data: canPostData } = await supabase
+          .rpc("can_employer_post_job", { employer_id: user.id });
+        if (!canPostData) {
+          toast({
+            title: t("error.posting_limit_reached") || "Posting limit reached",
+            description: t("error.upgrade_subscription") || "Please upgrade your subscription to post more jobs.",
+            variant: "destructive",
+          });
+          trackAnalyticsEvent('limit_block_publish', { context: 'rpc_block' });
+          return;
+        }
       }
     }
 
@@ -654,6 +680,20 @@ export default function PostJob() {
           </div>
         </div>
       </div>
+
+      {/* Gentle upgrade modal for publish attempts beyond Free plan limit */}
+      <UpgradePromptModal
+        open={upgradeModalOpen}
+        onOpenChange={(o) => setUpgradeModalOpen(o)}
+        onUpgrade={() => {
+          trackAnalyticsEvent("cta_upgrade_clicked", { context: "publish_modal" });
+          navigate("/employer/settings");
+        }}
+        onManageJobs={() => {
+          navigate("/employer");
+        }}
+        limit={FREE_PLAN_ACTIVE_LIMIT}
+      />
     </div>
   );
 }

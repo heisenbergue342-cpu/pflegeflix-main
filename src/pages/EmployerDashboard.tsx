@@ -22,6 +22,8 @@ import { formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 import ApplicationsDrawer from "@/components/employer/ApplicationsDrawer";
 import SEO from "@/components/SEO";
+import UpgradePromptModal from "@/components/employer/UpgradePromptModal";
+import { trackAnalyticsEvent } from "@/hooks/useAnalytics";
 
 type ViewMode = "table" | "grid";
 type SortBy = "newest" | "applications" | "views";
@@ -46,6 +48,9 @@ export default function EmployerDashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<string | null>(null);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [activeCount, setActiveCount] = useState(0);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const FREE_PLAN_ACTIVE_LIMIT = 20;
 
   useEffect(() => {
     if (!user) {
@@ -95,6 +100,8 @@ export default function EmployerDashboard() {
     }
 
     setJobs(data || []);
+    const active = (data || []).filter((j) => getJobStatus(j) === "online").length;
+    setActiveCount(active);
     setLoading(false);
   };
 
@@ -168,6 +175,15 @@ export default function EmployerDashboard() {
 
   const toggleJobStatus = async (jobId: string, currentActive: boolean) => {
     try {
+      // Reactivating (paused/closed -> active): enforce Free plan limit
+      if (!currentActive) {
+        if (activeCount >= FREE_PLAN_ACTIVE_LIMIT) {
+          setUpgradeModalOpen(true);
+          trackAnalyticsEvent("limit_warning_shown", { context: "reactivate", activeCount, limit: FREE_PLAN_ACTIVE_LIMIT });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("jobs")
         .update({ is_active: !currentActive })
@@ -314,6 +330,16 @@ export default function EmployerDashboard() {
           description: t("dashboard.bulk.pause_success"),
         });
       } else if (action === "resume") {
+        // Count how many selected jobs would be reactivated (paused or closed)
+        const resumesNeeded = jobs.filter(
+          (j) => jobIds.includes(j.id) && (getJobStatus(j) === "paused" || getJobStatus(j) === "closed")
+        ).length;
+        if (activeCount + resumesNeeded > FREE_PLAN_ACTIVE_LIMIT) {
+          setUpgradeModalOpen(true);
+          trackAnalyticsEvent("limit_warning_shown", { context: "bulk_resume", activeCount, limit: FREE_PLAN_ACTIVE_LIMIT, resumesNeeded });
+          return;
+        }
+
         const { error } = await supabase
           .from("jobs")
           .update({ is_active: true, closed_at: null })
@@ -435,7 +461,13 @@ export default function EmployerDashboard() {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {/* Show small active counter when limit is reached */}
+          {activeCount >= FREE_PLAN_ACTIVE_LIMIT && (
+            <Badge variant="outline" className="mr-2">
+              {activeCount}/{FREE_PLAN_ACTIVE_LIMIT} aktiv
+            </Badge>
+          )}
           <Button variant="outline" onClick={exportCSV}>
             <Download className="h-4 w-4 mr-2" />
             {t("dashboard.export")}
@@ -801,6 +833,21 @@ export default function EmployerDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Gentle upgrade modal for reactivation attempts beyond Free plan limit */}
+      <UpgradePromptModal
+        open={upgradeModalOpen}
+        onOpenChange={(o) => setUpgradeModalOpen(o)}
+        onUpgrade={() => {
+          trackAnalyticsEvent("cta_upgrade_clicked", { context: "dashboard_modal" });
+          navigate("/employer/settings");
+        }}
+        onManageJobs={() => {
+          navigate("/employer");
+        }}
+        activeCount={activeCount}
+        limit={FREE_PLAN_ACTIVE_LIMIT}
+      />
     </div>
   );
 }

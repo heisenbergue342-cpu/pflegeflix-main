@@ -58,7 +58,12 @@ export type AnalyticsEvent =
   | 'navigation_menu_opened'
   | 'cookie_preferences_changed'
   | 'error_occurred'
-  | 'menu_category_click';
+  | 'menu_category_click'
+  
+  // Plan Limits
+  | 'limit_warning_shown'
+  | 'limit_block_publish'
+  | 'cta_upgrade_clicked';
 
 export interface AnalyticsEventProps {
   [key: string]: string | number | boolean | undefined;
