@@ -287,6 +287,11 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
                   selected={localFilters.facilities.includes('1zu1')}
                   onClick={() => toggleArrayFilter('facilities', '1zu1')}
                 />
+                <PillChip
+                  label={t('category.outpatient')}
+                  selected={localFilters.facilities.includes('Ambulante Pflege')}
+                  onClick={() => toggleArrayFilter('facilities', 'Ambulante Pflege')}
+                />
               </div>
             </section>
 
