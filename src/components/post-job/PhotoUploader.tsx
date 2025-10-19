@@ -1,42 +1,86 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { X, UploadCloud } from "lucide-react";
+import { X, UploadCloud, ArrowUpCircle, Move } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { toast } from "sonner";
 
 type UploadedPhoto = {
   name: string;
   path: string;
   url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+  isCover?: boolean;
 };
 
 const BUCKET = "job-photos";
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_FILES = 5;
+const MAX_SIZE = 5 * 1024 * 1024;
 
 export default function PhotoUploader() {
   const { t } = useLanguage();
   const { draftId } = useParams();
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const dragSrcIndex = useRef<number | null>(null);
 
   const basePath = useMemo(() => {
     return draftId ? `drafts/${draftId}` : "drafts/temp";
   }, [draftId]);
 
+  const saveMetadata = async (list: UploadedPhoto[]) => {
+    const payload = list.map(p => ({
+      name: p.name,
+      path: p.path,
+      url: p.url,
+      alt: p.alt || "",
+      width: p.width || undefined,
+      height: p.height || undefined,
+      isCover: !!p.isCover,
+    }));
+    const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+    await supabase.storage.from(BUCKET).upload(`${basePath}/metadata.json`, blob, { upsert: true, contentType: "application/json" });
+  };
+
+  const loadMetadata = async (): Promise<UploadedPhoto[] | null> => {
+    const { data } = await supabase.storage.from(BUCKET).download(`${basePath}/metadata.json`);
+    if (!data) return null;
+    try {
+      const text = await data.text();
+      const parsed = JSON.parse(text) as UploadedPhoto[];
+      return parsed;
+    } catch {
+      return null;
+    }
+  };
+
   const listExisting = async () => {
+    // Try metadata first for order/alt/cover
+    const meta = await loadMetadata();
+    if (meta && meta.length) {
+      setPhotos(meta);
+      return;
+    }
+    // Fallback: list files and build entries
     const { data, error } = await supabase.storage.from(BUCKET).list(basePath, { limit: 20 });
     if (error) return;
     const mapped: UploadedPhoto[] = (data || [])
-      .filter((f) => !f.name.startsWith("."))
-      .map((f) => {
+      .filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json")
+      .map((f, idx) => {
         const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(`${basePath}/${f.name}`).data.publicUrl;
-        return { name: f.name, path: `${basePath}/${f.name}`, url: publicUrl };
+        return { name: f.name, path: `${basePath}/${f.name}`, url: publicUrl, isCover: idx === 0 };
       });
     setPhotos(mapped);
+    if (mapped.length) await saveMetadata(mapped);
   };
 
   useEffect(() => {
@@ -44,76 +88,219 @@ export default function PhotoUploader() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basePath]);
 
-  const onFilesSelected = async (files: FileList | null) => {
+  const getImageDimensions = (url: string) =>
+    new Promise<{ width: number; height: number }>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      img.src = url;
+    });
+
+  const validateFiles = (files: File[]) => {
+    for (const file of files) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        toast.error(t("common.upload_error_type"));
+        return false;
+      }
+      if (file.size > MAX_SIZE) {
+        toast.error(t("common.upload_error_size"));
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const currentCount = photos.length;
-    const allowed = Math.max(0, 5 - currentCount);
+    const allowed = Math.max(0, MAX_FILES - currentCount);
     const filesArr = Array.from(files).slice(0, allowed);
     if (filesArr.length === 0) return;
 
+    if (!validateFiles(filesArr)) return;
+
     setUploading(true);
+    const newPhotos: UploadedPhoto[] = [];
     for (const file of filesArr) {
       const ext = file.name.split(".").pop() || "jpg";
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      await supabase.storage.from(BUCKET).upload(`${basePath}/${filename}`, file, {
+      const path = `${basePath}/${filename}`;
+      const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
         cacheControl: "3600",
         upsert: false,
       });
+      if (error) {
+        toast.error(t("common.upload_error_network"));
+        continue;
+      }
+      const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      const dims = await getImageDimensions(publicUrl);
+      newPhotos.push({
+        name: filename,
+        path,
+        url: publicUrl,
+        width: dims.width,
+        height: dims.height,
+      });
     }
+    const updated = [...photos, ...newPhotos].slice(0, MAX_FILES);
+    // First is cover
+    if (updated.length) {
+      updated.forEach((p, i) => (p.isCover = i === 0));
+    }
+    setPhotos(updated);
+    await saveMetadata(updated);
     setUploading(false);
-    await listExisting();
   };
 
-  const removePhoto = async (photo: UploadedPhoto) => {
-    await supabase.storage.from(BUCKET).remove([photo.path]);
-    await listExisting();
+  const onRemove = async (index: number) => {
+    const p = photos[index];
+    if (!p) return;
+    await supabase.storage.from(BUCKET).remove([p.path]);
+    const next = photos.filter((_, i) => i !== index);
+    if (next.length) next.forEach((ph, i) => (ph.isCover = i === 0));
+    setPhotos(next);
+    await saveMetadata(next);
+  };
+
+  // Basic drag-and-drop reorder (HTML5 drag)
+  const onDragStart = (index: number) => {
+    dragSrcIndex.current = index;
+  };
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  const onDrop = async (index: number) => {
+    const src = dragSrcIndex.current;
+    dragSrcIndex.current = null;
+    if (src == null || src === index) return;
+    const next = [...photos];
+    const [moved] = next.splice(src, 1);
+    next.splice(index, 0, moved);
+    next.forEach((ph, i) => (ph.isCover = i === 0));
+    setPhotos(next);
+    await saveMetadata(next);
+  };
+
+  const setAsCover = async (index: number) => {
+    if (index === 0) return;
+    const next = [...photos];
+    const [moved] = next.splice(index, 1);
+    next.unshift(moved);
+    next.forEach((ph, i) => (ph.isCover = i === 0));
+    setPhotos(next);
+    await saveMetadata(next);
+  };
+
+  const updateAlt = async (index: number, alt: string) => {
+    const next = [...photos];
+    next[index] = { ...next[index], alt };
+    setPhotos(next);
+    await saveMetadata(next);
+  };
+
+  const onDragEnterZone = () => setDragActive(true);
+  const onDragLeaveZone = () => setDragActive(false);
+  const onDropZone = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(false);
+    const files = e.dataTransfer.files;
+    await handleFiles(files);
   };
 
   return (
     <div className="space-y-3">
-      <Label className="text-sm font-medium">{t("common.upload_photos") || "Fotos hochladen (optional)"}</Label>
-      <p className="text-sm text-muted-foreground">{t("common.upload_photos_hint") || "Bis zu 5 Fotos. Unterstützte Formate: JPG, PNG."}</p>
-      <div className="flex items-center gap-3">
+      <Label className="text-sm font-medium">{t("common.upload_photos")}</Label>
+      <p className="text-sm text-muted-foreground">{t("common.upload_photos_hint")}</p>
+
+      <div
+        className={`flex items-center gap-3 p-3 border rounded-md ${dragActive ? "border-netflix-red bg-netflix-red/10" : "border-border"}`}
+        onDragEnter={onDragEnterZone}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeaveZone}
+        onDrop={onDropZone}
+        aria-label={t("common.upload_photos")}
+      >
         <input
           id="job-photos-input"
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp"
           multiple
-          onChange={(e) => onFilesSelected(e.target.files)}
+          onChange={(e) => handleFiles(e.target.files)}
           className="hidden"
         />
         <Button
           type="button"
           onClick={() => document.getElementById("job-photos-input")?.click()}
-          disabled={uploading || photos.length >= 5}
+          disabled={uploading || photos.length >= MAX_FILES}
           className="gap-2"
         >
           <UploadCloud className="h-4 w-4" />
-          {uploading ? (t("loading") || "Laden...") : (t("common.upload") || "Hochladen")}
+          {uploading ? t("loading") : t("common.upload")}
         </Button>
-        <span className="text-sm text-muted-foreground">{photos.length}/5</span>
+        <span className="text-sm text-muted-foreground">
+          {t("common.upload_counter", { count: photos.length })}
+        </span>
+        <span className="ml-auto text-xs text-muted-foreground">
+          {dragActive ? "Drop to upload" : "Drag & drop images here"}
+        </span>
       </div>
 
       {photos.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {photos.map((p) => (
-            <Card key={p.path} className="relative overflow-hidden">
+          {photos.map((p, idx) => (
+            <Card
+              key={p.path}
+              className={`relative overflow-hidden group focus-within:ring-2 focus-within:ring-[hsl(var(--focus-outline))]`}
+              draggable
+              onDragStart={() => onDragStart(idx)}
+              onDragOver={onDragOver}
+              onDrop={() => onDrop(idx)}
+            >
               <img
                 src={p.url}
-                alt="Job photo"
+                alt={p.alt || t("common.gallery_image_alt")}
                 className="h-32 w-full object-cover"
                 loading="lazy"
+                width={p.width}
+                height={p.height}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute top-1 right-1 bg-black/40 text-white hover:bg-black/60"
-                onClick={() => removePhoto(p)}
-                aria-label={t("common.remove_item", { item: "Foto" })}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              {idx === 0 && (
+                <div className="absolute top-1 left-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
+                  Cover
+                </div>
+              )}
+              <div className="absolute top-1 right-1 flex gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="bg-black/40 text-white hover:bg-black/60"
+                  onClick={() => setAsCover(idx)}
+                  aria-label="Set as cover"
+                >
+                  <ArrowUpCircle className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="bg-black/40 text-white hover:bg-black/60"
+                  onClick={() => onRemove(idx)}
+                  aria-label={t("common.remove_item", { item: "Foto" })}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="p-2 bg-background">
+                <label className="sr-only">Alt</label>
+                <input
+                  type="text"
+                  value={p.alt || ""}
+                  onChange={(e) => updateAlt(idx, e.target.value)}
+                  placeholder="Alt-Text"
+                  className="w-full bg-muted text-sm rounded px-2 py-1"
+                />
+              </div>
             </Card>
           ))}
         </div>

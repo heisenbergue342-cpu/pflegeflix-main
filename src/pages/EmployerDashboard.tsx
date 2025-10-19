@@ -203,6 +203,15 @@ export default function EmployerDashboard() {
 
       if (error) throw error;
 
+      // Remove photos from storage
+      const BUCKET = "job-photos";
+      const folder = `jobs/${jobToDelete}`;
+      const { data: files } = await supabase.storage.from(BUCKET).list(folder, { limit: 100 });
+      if (files && files.length) {
+        const paths = files.map(f => `${folder}/${f.name}`);
+        await supabase.storage.from(BUCKET).remove(paths);
+      }
+
       toast({
         description: t("job.toast.deleted"),
       });
