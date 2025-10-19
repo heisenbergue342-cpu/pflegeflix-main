@@ -15,6 +15,7 @@ import { StepApplication } from "@/components/post-job/StepApplication";
 import { StepPreview } from "@/components/post-job/StepPreview";
 import SEO from "@/components/SEO";
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { FREE_MODE, FREE_MODE_MAX_ACTIVE_JOBS } from '@/utils/featureFlags';
 
 export default function PostJob() {
   const { draftId } = useParams();
@@ -57,6 +58,18 @@ export default function PostJob() {
     const checkRoleAndSubscription = async () => {
       if (!user) {
         navigate("/auth");
+        return;
+      }
+
+      // If FREE_MODE is enabled, skip subscription/plan checks
+      if (FREE_MODE) {
+        setCanPost(true);
+        setSubscriptionInfo({
+          plan: {
+            name: "Free Mode",
+            max_active_jobs: FREE_MODE_MAX_ACTIVE_JOBS,
+          },
+        });
         return;
       }
 
@@ -129,7 +142,7 @@ export default function PostJob() {
           setSubscriptionInfo(subData);
         }
 
-        // Check if employer can post jobs (subscription limits)
+        // Check if employer can post jobs (subscription limits) unless FREE_MODE
         const { data: canPostData, error: canPostError } = await supabase
           .rpc("can_employer_post_job", { employer_id: user.id });
 
@@ -311,17 +324,19 @@ export default function PostJob() {
   const publishJob = async () => {
     if (!user || !validateStep()) return;
 
-    // Double-check posting limits before publishing
-    const { data: canPostData } = await supabase
-      .rpc("can_employer_post_job", { employer_id: user.id });
+    // Double-check posting limits before publishing, unless FREE_MODE
+    if (!FREE_MODE) {
+      const { data: canPostData } = await supabase
+        .rpc("can_employer_post_job", { employer_id: user.id });
 
-    if (!canPostData) {
-      toast({
-        title: t("error.posting_limit_reached") || "Posting limit reached",
-        description: t("error.upgrade_subscription") || "Please upgrade your subscription to post more jobs.",
-        variant: "destructive",
-      });
-      return;
+      if (!canPostData) {
+        toast({
+          title: t("error.posting_limit_reached") || "Posting limit reached",
+          description: t("error.upgrade_subscription") || "Please upgrade your subscription to post more jobs.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     const jobData = {
@@ -494,7 +509,7 @@ export default function PostJob() {
   }
 
   // Show empty state if no posting slots available
-  if (canPost === false) {
+  if (!FREE_MODE && canPost === false) {
     return (
       <div className="min-h-screen bg-background pt-20 pb-8">
         <div className="container max-w-4xl mx-auto px-4">

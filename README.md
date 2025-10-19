@@ -91,6 +91,18 @@ See [PERFORMANCE.md](./PERFORMANCE.md) for detailed optimization guide.
 
 Simply open [Lovable](https://lovable.dev/projects/4502088b-1ccb-4c0a-9b1b-50557b40bf76) and click on Share -> Publish.
 
+## Free Mode (temporary beta)
+
+To run the platform 100% free (no subscription limits), set the following env variables and restart the dev server:
+
+- VITE_FREE_MODE=true
+- VITE_FREE_MODE_MAX_ACTIVE_JOBS=-1   # optional; -1 means unlimited
+
+When Free Mode is enabled:
+- Employers can post, edit, pause, duplicate, and view applicants without paywalls.
+- "Upgrade" prompts and slot gating are bypassed.
+- Turning VITE_FREE_MODE=false restores previous plan behavior.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
