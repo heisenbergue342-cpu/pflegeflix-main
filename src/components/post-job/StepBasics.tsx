@@ -7,10 +7,12 @@ import PhotoUploader from "./PhotoUploader";
 
 interface StepBasicsProps {
   formData: any;
-  updateFormData: (data: any) => void;
+  updateFormData: (data: Partial<any>) => void;
+  isEditing?: boolean;
+  editingJobId?: string;
 }
 
-export function StepBasics({ formData, updateFormData }: StepBasicsProps) {
+export function StepBasics({ formData, updateFormData, isEditing, editingJobId }: StepBasicsProps) {
   const { t } = useLanguage();
 
   const states = [
@@ -97,7 +99,7 @@ export function StepBasics({ formData, updateFormData }: StepBasicsProps) {
 
       {/* Optional image upload */}
       <div className="pt-4 border-t">
-        <PhotoUploader />
+        <PhotoUploader mode={isEditing ? 'job' : 'draft'} idOverride={isEditing ? editingJobId : undefined} />
       </div>
     </div>
   );

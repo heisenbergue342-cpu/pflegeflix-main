@@ -20,12 +20,17 @@ type UploadedPhoto = {
   isCover?: boolean;
 };
 
+interface PhotoUploaderProps {
+  mode?: 'draft' | 'job';
+  idOverride?: string;
+}
+
 const BUCKET = "job-photos";
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_FILES = 5;
 const MAX_SIZE = 5 * 1024 * 1024;
 
-export default function PhotoUploader() {
+export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploaderProps) {
   const { t } = useLanguage();
   const { draftId } = useParams();
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
@@ -34,8 +39,10 @@ export default function PhotoUploader() {
   const dragSrcIndex = useRef<number | null>(null);
 
   const basePath = useMemo(() => {
+    if (mode === 'job' && idOverride) return `jobs/${idOverride}`;
+    if (mode === 'draft' && idOverride) return `drafts/${idOverride}`;
     return draftId ? `drafts/${draftId}` : "drafts/temp";
-  }, [draftId]);
+  }, [mode, idOverride, draftId]);
 
   const saveMetadata = async (list: UploadedPhoto[]) => {
     const payload = list.map(p => ({
@@ -64,15 +71,12 @@ export default function PhotoUploader() {
   };
 
   const listExisting = async () => {
-    // Try metadata first for order/alt/cover
     const meta = await loadMetadata();
     if (meta && meta.length) {
       setPhotos(meta);
       return;
     }
-    // Fallback: list files and build entries
-    const { data, error } = await supabase.storage.from(BUCKET).list(basePath, { limit: 20 });
-    if (error) return;
+    const { data } = await supabase.storage.from(BUCKET).list(basePath, { limit: 20 });
     const mapped: UploadedPhoto[] = (data || [])
       .filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json")
       .map((f, idx) => {
@@ -143,7 +147,6 @@ export default function PhotoUploader() {
       });
     }
     const updated = [...photos, ...newPhotos].slice(0, MAX_FILES);
-    // First is cover
     if (updated.length) {
       updated.forEach((p, i) => (p.isCover = i === 0));
     }
@@ -162,13 +165,8 @@ export default function PhotoUploader() {
     await saveMetadata(next);
   };
 
-  // Basic drag-and-drop reorder (HTML5 drag)
-  const onDragStart = (index: number) => {
-    dragSrcIndex.current = index;
-  };
-  const onDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
+  const onDragStart = (index: number) => { dragSrcIndex.current = index; };
+  const onDragOver = (e: React.DragEvent) => { e.preventDefault(); };
   const onDrop = async (index: number) => {
     const src = dragSrcIndex.current;
     dragSrcIndex.current = null;
@@ -250,7 +248,7 @@ export default function PhotoUploader() {
           {photos.map((p, idx) => (
             <Card
               key={p.path}
-              className={`relative overflow-hidden group focus-within:ring-2 focus-within:ring-[hsl(var(--focus-outline))]`}
+              className="relative overflow-hidden group focus-within:ring-2 focus-within:ring-[hsl(var(--focus-outline))]"
               draggable
               onDragStart={() => onDragStart(idx)}
               onDragOver={onDragOver}

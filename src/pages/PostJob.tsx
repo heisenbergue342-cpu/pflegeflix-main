@@ -15,7 +15,7 @@ import { StepApplication } from "@/components/post-job/StepApplication";
 import { StepPreview } from "@/components/post-job/StepPreview";
 import SEO from "@/components/SEO";
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
-import { FREE_MODE, FREE_MODE_MAX_ACTIVE_JOBS } from '@/utils/featureFlags';
+import { FREE_MODE_ACTIVE, FREE_MODE_MAX_ACTIVE_JOBS } from '@/utils/featureFlags';
 
 export default function PostJob() {
   const { draftId } = useParams();
@@ -27,6 +27,8 @@ export default function PostJob() {
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
+  // Track when we are editing an existing job (not a draft)
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({
     title: "",
     facility_id: null,
@@ -61,8 +63,8 @@ export default function PostJob() {
         return;
       }
 
-      // If FREE_MODE is enabled, skip subscription/plan checks
-      if (FREE_MODE) {
+      // During launch free mode, skip subscription/plan checks entirely
+      if (FREE_MODE_ACTIVE) {
         setCanPost(true);
         setSubscriptionInfo({
           plan: {
@@ -74,14 +76,12 @@ export default function PostJob() {
       }
 
       try {
-        const { data: roleData, error: roleError } = await supabase
+        const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id)
           .in("role", ["arbeitgeber", "admin"])
           .maybeSingle();
-
-        console.log("Role check:", { roleData, roleError });
 
         if (!roleData) {
           navigate("/");
@@ -89,73 +89,20 @@ export default function PostJob() {
         }
 
         // Get subscription info first
-        const { data: subData, error: subError } = await supabase
+        const { data: subData } = await supabase
           .from("employer_subscriptions")
-          .select(`
-            *,
-            plan:subscription_plans(*)
-          `)
+          .select(`*, plan:subscription_plans(*)`)
           .eq("employer_id", user.id)
           .maybeSingle();
 
-        console.log("Subscription data:", { subData, subError });
+        setSubscriptionInfo(subData || null);
 
-        // If no subscription exists, create a free tier subscription
-        if (!subData && !subError) {
-          console.log("No subscription found, creating free tier subscription...");
-          
-          const { data: freePlan } = await supabase
-            .from("subscription_plans")
-            .select("id")
-            .eq("tier", "free")
-            .single();
-          
-          if (freePlan) {
-            const { error: createError } = await supabase
-              .from("employer_subscriptions")
-              .insert({
-                employer_id: user.id,
-                plan_id: freePlan.id,
-                status: 'active',
-                current_period_start: new Date().toISOString(),
-                current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-              });
-            
-            if (!createError) {
-              console.log("Free tier subscription created successfully");
-              // Reload subscription data
-              const { data: newSubData } = await supabase
-                .from("employer_subscriptions")
-                .select(`
-                  *,
-                  plan:subscription_plans(*)
-                `)
-                .eq("employer_id", user.id)
-                .maybeSingle();
-              
-              setSubscriptionInfo(newSubData);
-            } else {
-              console.error("Failed to create free subscription:", createError);
-            }
-          }
-        } else {
-          setSubscriptionInfo(subData);
-        }
-
-        // Check if employer can post jobs (subscription limits) unless FREE_MODE
-        const { data: canPostData, error: canPostError } = await supabase
+        // Only check posting limit for create flows; edits will bypass this later
+        const { data: canPostData } = await supabase
           .rpc("can_employer_post_job", { employer_id: user.id });
 
-        console.log("Can post check:", { canPostData, canPostError });
-
-        if (canPostError) {
-          console.error("Error checking posting limits:", canPostError);
-          setCanPost(false);
-        } else {
-          setCanPost(canPostData === true);
-        }
-      } catch (error) {
-        console.error("Error in checkRoleAndSubscription:", error);
+        setCanPost(canPostData === true);
+      } catch (_e) {
         // Fallback to allowing if check fails
         setCanPost(true);
       }
@@ -164,12 +111,69 @@ export default function PostJob() {
     checkRoleAndSubscription();
   }, [user, navigate]);
 
-  // Load draft if draftId exists
+  // Load draft or existing job (edit mode)
   useEffect(() => {
-    if (draftId) {
-      loadDraft();
-    }
-  }, [draftId]);
+    const loadDraftOrJob = async () => {
+      if (!draftId) return;
+
+      // Try loading as draft first
+      const { data: draft } = await supabase
+        .from("draft_jobs")
+        .select("*")
+        .eq("id", draftId)
+        .maybeSingle();
+
+      if (draft) {
+        setFormData(draft);
+        setCurrentStep(draft.step || 1);
+        return;
+      }
+
+      // Fallback: try loading as existing job (edit mode)
+      const { data: job } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("id", draftId)
+        .maybeSingle();
+
+      if (job) {
+        setEditingJobId(job.id);
+        setFormData({
+          title: job.title,
+          facility_id: job.facility_id,
+          facility_type: job.facility_type,
+          city: job.city,
+          state: job.state,
+          description: job.description || "",
+          requirements: job.requirements || [],
+          tags: job.tags || [],
+          shift_type: job.shift_type || "",
+          salary_min: job.salary_min,
+          salary_max: job.salary_max,
+          salary_unit: job.salary_unit,
+          contract_type: job.contract_type,
+          featured: !!job.featured,
+          application_method: "email",
+          application_email: "",
+          application_url: "",
+          auto_reply_template: "",
+          contact_person: "",
+          acceptedTerms: true,
+        });
+        setCurrentStep(1);
+        trackAnalyticsEvent('job_edit_opened', { jobId: job.id });
+        return;
+      }
+
+      // Nothing found
+      toast({
+        title: t("error.load_failed"),
+        variant: "destructive",
+      });
+    };
+
+    loadDraftOrJob();
+  }, [draftId, t]);
 
   // Autosave every 30 seconds
   useEffect(() => {
@@ -324,8 +328,48 @@ export default function PostJob() {
   const publishJob = async () => {
     if (!user || !validateStep()) return;
 
-    // Double-check posting limits before publishing, unless FREE_MODE
-    if (!FREE_MODE) {
+    // If editing an existing job, update in place (never check slots)
+    if (editingJobId) {
+      const jobData = {
+        title: formData.title,
+        facility_id: formData.facility_id,
+        facility_type: formData.facility_type,
+        city: formData.city,
+        state: formData.state,
+        description: formData.description,
+        requirements: formData.requirements,
+        tags: formData.tags,
+        shift_type: formData.shift_type,
+        salary_min: formData.salary_min,
+        salary_max: formData.salary_max,
+        salary_unit: formData.salary_unit,
+        contract_type: formData.contract_type,
+        featured: formData.featured,
+        // Keep owner_id and other system fields unchanged
+      };
+
+      const { error: updateError } = await supabase
+        .from("jobs")
+        .update(jobData)
+        .eq("id", editingJobId);
+
+      if (updateError) {
+        toast({
+          title: t("error.update_failed"),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setHasUnsavedChanges(false);
+      trackAnalyticsEvent('job_edit_saved', { jobId: editingJobId });
+      toast({ description: t("common.save") });
+      navigate("/employer");
+      return;
+    }
+
+    // Create flow: Only honor slot checks when not in free mode
+    if (!FREE_MODE_ACTIVE) {
       const { data: canPostData } = await supabase
         .rpc("can_employer_post_job", { employer_id: user.id });
 
@@ -335,6 +379,8 @@ export default function PostJob() {
           description: t("error.upgrade_subscription") || "Please upgrade your subscription to post more jobs.",
           variant: "destructive",
         });
+        // For telemetry
+        trackAnalyticsEvent('paywall_shown', { reason: 'no_slots' });
         return;
       }
     }
@@ -417,7 +463,7 @@ export default function PostJob() {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <StepBasics formData={formData} updateFormData={updateFormData} />;
+        return <StepBasics formData={formData} updateFormData={updateFormData} isEditing={!!editingJobId} editingJobId={editingJobId || undefined} />;
       case 2:
         return <StepDetails formData={formData} updateFormData={updateFormData} />;
       case 3:
@@ -508,8 +554,8 @@ export default function PostJob() {
     );
   }
 
-  // Show empty state if no posting slots available
-  if (!FREE_MODE && canPost === false) {
+  // Show empty state if no posting slots available (create-only; hide during free mode or when editing existing job)
+  if (!FREE_MODE_ACTIVE && canPost === false && !editingJobId) {
     return (
       <div className="min-h-screen bg-background pt-20 pb-8">
         <div className="container max-w-4xl mx-auto px-4">

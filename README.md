@@ -103,6 +103,20 @@ When Free Mode is enabled:
 - "Upgrade" prompts and slot gating are bypassed.
 - Turning VITE_FREE_MODE=false restores previous plan behavior.
 
+## Launch Free Mode (soft launch)
+
+To disable all subscription/paywall gates during the launch period, set:
+
+- VITE_LAUNCH_FREE_MODE=true
+- (optional) VITE_FREE_MODE_MAX_ACTIVE_JOBS=-1  # -1 = unlimited, display only
+
+When Launch Free Mode is enabled:
+- Employers can edit, pause/unpause, duplicate, and publish without any paywall.
+- "Upgrade" modals/CTAs are hidden.
+- Plan checks are only applied when VITE_LAUNCH_FREE_MODE=false (and will behave as before).
+
+Turn it off by setting VITE_LAUNCH_FREE_MODE=false and restarting.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
