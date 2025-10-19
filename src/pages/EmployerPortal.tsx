@@ -23,7 +23,7 @@ export default function EmployerPortal() {
       }
 
       if (profile?.role !== 'arbeitgeber' && profile?.role !== 'admin') {
-        navigate("/");
+        navigate("/not-authorized");
         return;
       }
 

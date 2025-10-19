@@ -359,6 +359,29 @@ export default function PostJob() {
       return;
     }
 
+    // Move uploaded photos from drafts/{draftId} to jobs/{newJob.id}
+    if (draftId && newJob?.id) {
+      const BUCKET = "job-photos";
+      const fromFolder = `drafts/${draftId}`;
+      const toFolder = `jobs/${newJob.id}`;
+      const { data: files } = await supabase.storage.from(BUCKET).list(fromFolder, { limit: 20 });
+      if (files && files.length > 0) {
+        for (const f of files) {
+          const fromPath = `${fromFolder}/${f.name}`;
+          const toPath = `${toFolder}/${f.name}`;
+          // Try move; if not supported, fallback to copy via download+upload
+          const { error: moveError } = await supabase.storage.from(BUCKET).move(fromPath, toPath);
+          if (moveError) {
+            const { data: fileData } = await supabase.storage.from(BUCKET).download(fromPath);
+            if (fileData) {
+              await supabase.storage.from(BUCKET).upload(toPath, fileData as Blob, { upsert: true });
+              await supabase.storage.from(BUCKET).remove([fromPath]);
+            }
+          }
+        }
+      }
+    }
+
     // Delete draft if exists
     if (draftId) {
       await supabase.from("draft_jobs").delete().eq("id", draftId);

@@ -73,6 +73,7 @@ const App = () => (
                   <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/not-authorized" element={<NotAuthorized />} />
                 <Route path="/job/:id" element={<JobDetails />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/saved" element={<Saved />} />
@@ -98,6 +99,7 @@ const App = () => (
                 {/* Employer Portal with nested routes */}
                 <Route path="/employer" element={<EmployerPortal />}>
                   <Route index element={<EmployerDashboard />} />
+                  <Route path="jobs" element={<EmployerDashboard />} />
                   <Route path="post" element={<PostJob />} />
                   <Route path="post/:draftId" element={<PostJob />} />
                   <Route path="applicants" element={<EmployerApplicants />} />

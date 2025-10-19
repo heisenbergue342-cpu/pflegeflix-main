@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { germanCities } from "@/data/cities_de";
+import PhotoUploader from "./PhotoUploader";
 
 interface StepBasicsProps {
   formData: any;
@@ -92,6 +93,11 @@ export function StepBasics({ formData, updateFormData }: StepBasicsProps) {
             </Select>
           </div>
         </div>
+      </div>
+
+      {/* Optional image upload */}
+      <div className="pt-4 border-t">
+        <PhotoUploader />
       </div>
     </div>
   );

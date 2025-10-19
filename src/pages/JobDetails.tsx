@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import { JobPostingStructuredData, BreadcrumbStructuredData, OrganizationStructuredData } from '@/components/StructuredData';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import JobPhotoGallery from '@/components/JobPhotoGallery';
 
 export default function JobDetails() {
   const { id } = useParams();
@@ -260,6 +261,9 @@ export default function JobDetails() {
                 </Badge>
               ))}
             </div>
+
+            {/* Photo Gallery */}
+            <JobPhotoGallery jobId={job.id} />
 
             <div className="space-y-6 mb-8">
               <div>
