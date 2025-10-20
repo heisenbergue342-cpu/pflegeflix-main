@@ -27,7 +27,7 @@ interface PhotoUploaderProps {
 }
 
 const BUCKET = "job-photos";
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_FILES = 5;
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -57,11 +57,16 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
       isCover: !!p.isCover,
     }));
     const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
-    await supabase.storage.from(BUCKET).upload(`${basePath}/metadata.json`, blob, { upsert: true, contentType: "application/json" });
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(`${basePath}/metadata.json`, blob, { upsert: true, contentType: "application/json" });
+    if (error) {
+      toast.error(`${t("common.upload_error_network")} (${error.message})`);
+    }
   };
 
   const loadMetadata = async (): Promise<UploadedPhoto[] | null> => {
-    const { data } = await supabase.storage.from(BUCKET).download(`${basePath}/metadata.json`);
+    const { data, error } = await supabase.storage.from(BUCKET).download(`${basePath}/metadata.json`);
     if (!data) return null;
     try {
       const text = await data.text();
@@ -137,19 +142,31 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
   const validateFiles = (files: File[]) => {
     for (const file of files) {
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        toast.error(t("common.upload_error_type"));
+        toast.error(`${t("common.upload_error_type")} (${file.name})`);
         return false;
       }
       if (file.size > MAX_SIZE) {
-        toast.error(t("common.upload_error_size"));
+        toast.error(`${t("common.upload_error_size")} (${file.name})`);
         return false;
       }
     }
     return true;
   };
 
+  // Check bucket/path availability before uploading to show actionable errors
+  const preflightStorage = async (): Promise<string | null> => {
+    const { error } = await supabase.storage.from(BUCKET).list(basePath, { limit: 1 });
+    if (error) return error.message;
+    return null;
+  };
+
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
+    const preflightError = await preflightStorage();
+    if (preflightError) {
+      toast.error(`${t("common.upload_error_network")} (${preflightError})`);
+      return;
+    }
     const currentCount = photos.length;
     const allowed = Math.max(0, MAX_FILES - currentCount);
     const filesArr = Array.from(files).slice(0, allowed);
@@ -163,11 +180,9 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     const newPhotos: UploadedPhoto[] = [];
     for (let i = 0; i < filesArr.length; i++) {
       const file = filesArr[i];
-
       // Step 1: convert (or pass-through)
       setProgress(Math.round(((i + 0.2) / filesArr.length) * 100));
       const processedBlob = await convertToWebP(file);
-
       // Step 2: upload
       const ext = "webp";
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -179,10 +194,9 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
         contentType: "image/webp",
       });
       if (error) {
-        toast.error(t("common.upload_error_network"));
+        toast.error(`${t("common.upload_error_network")} (${error.message})`);
         continue;
       }
-
       // Step 3: public URL + dimensions
       const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
       const dims = await getImageDimensionsFromBlob(processedBlob);
