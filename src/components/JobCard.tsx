@@ -1,11 +1,11 @@
-import { Heart, MapPin } from 'lucide-react';
+import { Heart, MapPin, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import LoginPromptModal from '@/components/LoginPromptModal';
 import { analyticsJob } from '@/lib/analytics-events';
@@ -22,6 +22,13 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
   const [isSaved, setIsSaved] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const BOOST_WINDOW_HOURS = 48;
+  const isBoosted = useMemo(() => {
+    if (!job?.boosted_at) return false;
+    const boostedAt = new Date(job.boosted_at).getTime();
+    const cutoff = Date.now() - BOOST_WINDOW_HOURS * 60 * 60 * 1000;
+    return boostedAt >= cutoff;
+  }, [job?.boosted_at]);
 
   useEffect(() => {
     if (user) {
@@ -86,6 +93,14 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10" aria-hidden="true" />
         
         <div className="absolute top-3 right-3 z-20">
+          {/* Boosted badge (48h window) */}
+          {isBoosted && (
+            <div className="mb-2 flex items-center gap-1 rounded-full bg-black/50 text-white px-2 py-1 text-xs backdrop-blur-sm">
+              <Zap className="w-3.5 h-3.5 text-yellow-400" aria-hidden="true" />
+              <span aria-label={t('job.boosted_badge')}>{t('job.boosted_badge')}</span>
+            </div>
+          )}
+          
           <Button
             size="icon"
             variant="ghost"

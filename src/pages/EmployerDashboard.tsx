@@ -15,8 +15,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { 
   Plus, Search, Filter, LayoutGrid, LayoutList, Download, 
   Eye, EyeOff, Edit, Trash2, Users, Copy, Star, 
-  Play, Pause, XCircle, Calendar, ArrowUpDown, Briefcase
+  Play, Pause, XCircle, Calendar, ArrowUpDown, Briefcase, Zap
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
@@ -33,7 +34,7 @@ type CategoryFilter = "all" | "Kliniken" | "Krankenhäuser" | "Altenheim" | "1:1
 export default function EmployerDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, formatDate } = useLanguage();
   const [jobs, setJobs] = useState<any[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +52,7 @@ export default function EmployerDashboard() {
   const [activeCount, setActiveCount] = useState(0);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const FREE_PLAN_ACTIVE_LIMIT = 20;
+  const REFRESH_COOLDOWN_DAYS = 14;
 
   useEffect(() => {
     if (!user) {
@@ -162,6 +164,22 @@ export default function EmployerDashboard() {
     return "online";
   };
 
+  const getLastRefresh = (job: any): Date | null => (job?.boosted_at ? new Date(job.boosted_at) : null);
+  const getNextRefresh = (job: any): Date | null => {
+    const last = getLastRefresh(job);
+    if (!last) return new Date(); // immediate eligibility
+    const next = new Date(last);
+    next.setDate(next.getDate() + REFRESH_COOLDOWN_DAYS);
+    return next;
+  };
+  const canRefresh = (job: any): boolean => {
+    if (getJobStatus(job) !== "online") return false;
+    const next = getNextRefresh(job);
+    return !job?.boosted_at || (next && next <= new Date());
+  };
+  const [refreshDialogOpen, setRefreshDialogOpen] = useState(false);
+  const [jobToRefresh, setJobToRefresh] = useState<string | null>(null);
+
   const getStatusBadgeVariant = (status: StatusFilter): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case "online": return "default";
@@ -241,6 +259,50 @@ export default function EmployerDashboard() {
         title: t("error.delete_failed"),
         variant: "destructive",
       });
+    }
+  };
+
+  const openRefreshConfirm = (jobId: string) => {
+    setJobToRefresh(jobId);
+    setRefreshDialogOpen(true);
+  };
+
+  const refreshJob = async () => {
+    if (!jobToRefresh || !user) return;
+    try {
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from("jobs")
+        .update({ boosted_at: now, updated_at: now })
+        .eq("id", jobToRefresh)
+        .eq("owner_id", user.id)
+        .eq("is_active", true);
+      if (error) throw error;
+
+      // Log analytics (frontend + DB event)
+      trackAnalyticsEvent("job_refreshed", { jobId: jobToRefresh });
+      const job = jobs.find(j => j.id === jobToRefresh);
+      await supabase.from("job_analytics").insert({
+        job_id: jobToRefresh,
+        event_type: "job_refreshed",
+        event_data: {
+          employerId: user.id,
+          timestamp: now,
+          baseline: {
+            views: job?.views_count || 0,
+            applications: job?.applications_count || 0,
+            saves: job?.saves_count || 0,
+          }
+        },
+        user_id: user.id
+      });
+
+      toast({ description: t("job.refresh_success") });
+      setRefreshDialogOpen(false);
+      setJobToRefresh(null);
+      loadJobs();
+    } catch (e: any) {
+      toast({ title: t("job.refresh_failed"), variant: "destructive" });
     }
   };
 
@@ -625,6 +687,12 @@ export default function EmployerDashboard() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">{job.title}</TableCell>
+                      {/* Refresh meta under title if any */}
+                      {job.boosted_at && (
+                        <TableCell className="col-span-1 text-xs text-muted-foreground sm:hidden">
+                          {t("job.last_refresh")}: {formatDate(new Date(job.boosted_at), "short")} • {t("job.next_refresh")}: {formatDate(getNextRefresh(job)!, "short")}
+                        </TableCell>
+                      )}
                       <TableCell>{job.city}, {job.state}</TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(getJobStatus(job))}>
@@ -652,6 +720,33 @@ export default function EmployerDashboard() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-2">
+                          {/* Refresh / Boost */}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openRefreshConfirm(job.id)}
+                                    disabled={!canRefresh(job)}
+                                    aria-label={canRefresh(job) ? t("job.refresh") : t(getJobStatus(job) !== "online" ? "job.refresh_unavailable_status" : "job.refresh_cooldown_hint", { date: formatDate(getNextRefresh(job)!, "short") })}
+                                  >
+                                    <Zap className="h-4 w-4" />
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              {!canRefresh(job) && (
+                                <TooltipContent>
+                                  <p>
+                                    {getJobStatus(job) !== "online"
+                                      ? t("job.refresh_unavailable_status")
+                                      : `${t("job.next_refresh")}: ${formatDate(getNextRefresh(job)!, "short")}`}
+                                  </p>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -725,7 +820,12 @@ export default function EmployerDashboard() {
                     </Badge>
                   </div>
                   
-                  <h3 className="font-semibold text-lg mb-2">{job.title}</h3>
+                  <h3 className="font-semibold text-lg mb-1">{job.title}</h3>
+                  {job.boosted_at && (
+                    <div className="text-xs text-muted-foreground mb-2">
+                      {t("job.last_refresh")}: {formatDate(new Date(job.boosted_at), "short")} • {t("job.next_refresh")}: {formatDate(getNextRefresh(job)!, "short")}
+                    </div>
+                  )}
                   <p className="text-sm text-muted-foreground mb-4">
                     {job.city}, {job.state}
                   </p>
@@ -743,6 +843,32 @@ export default function EmployerDashboard() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openRefreshConfirm(job.id)}
+                              disabled={!canRefresh(job)}
+                            >
+                              <Zap className="h-4 w-4 mr-2" />
+                              {canRefresh(job) ? t("job.refresh") : t("job.refreshed")}
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        {!canRefresh(job) && (
+                          <TooltipContent>
+                            <p>
+                              {getJobStatus(job) !== "online"
+                                ? t("job.refresh_unavailable_status")
+                                : `${t("job.next_refresh")}: ${formatDate(getNextRefresh(job)!, "short")}`}
+                            </p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                     <Button variant="outline" size="sm" asChild>
                       <Link to={`/job/${job.id}`}>
                         <Eye className="h-4 w-4 mr-2" />
@@ -829,6 +955,24 @@ export default function EmployerDashboard() {
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => bulkAction("delete")} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               {t("dashboard.bulk.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Refresh Confirmation Dialog */}
+      <AlertDialog open={refreshDialogOpen} onOpenChange={setRefreshDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("job.refresh_confirm_title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("job.refresh_confirm_desc")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={refreshJob}>
+              {t("job.refresh")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

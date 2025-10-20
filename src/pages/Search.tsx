@@ -101,6 +101,7 @@ export default function Search() {
       .from('jobs')
       .select('*')
       .eq('approved', true)
+      .order('boosted_at', { ascending: false, nullsFirst: false })
       .order('posted_at', { ascending: false });
 
     // Special handling: 'Ambulante Pflege' filters by tag instead of facility_type
