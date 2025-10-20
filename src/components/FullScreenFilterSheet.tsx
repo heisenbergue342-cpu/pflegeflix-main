@@ -7,6 +7,7 @@ import { PillChip } from '@/components/PillChip';
 import { SpecialtyFilter } from '@/components/SpecialtyFilter';
 import { Slider } from '@/components/ui/slider';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { supabase } from '@/integrations/supabase/client';
 import { germanCities, City } from '@/data/cities_de';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
@@ -42,7 +43,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
   useEffect(() => {
     // Sanitize shiftTypes from saved filters/sessions: keep only allowed values
     const allowedShiftTypes = (filters.shiftTypes || []).filter(
-      (t) => t === 'Tagschicht' || t === 'Nachtschicht'
+      (t) => t === 'Tagschicht' || t === 'Spätschicht' || t === 'Nachtschicht'
     );
     setLocalFilters({ ...filters, shiftTypes: allowedShiftTypes });
   }, [filters]);
@@ -142,6 +143,10 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
       const updated = current.includes(value)
         ? current.filter(v => v !== value)
         : [...current, value];
+      if (key === 'shiftTypes') {
+        const val = value === 'Tagschicht' ? 'day' : value === 'Spätschicht' ? 'late' : 'night';
+        trackAnalyticsEvent('shift_selected', { value: val });
+      }
       return { ...prev, [key]: updated };
     });
   };
@@ -337,7 +342,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
             <section aria-labelledby="shift-heading">
               <h3 id="shift-heading" className="text-lg font-bold mb-3">{t('job.field.shift_type')}</h3>
               <div className="flex flex-wrap gap-3">
-                {['Tagschicht', 'Nachtschicht'].map(type => (
+                {['Tagschicht', 'Spätschicht', 'Nachtschicht'].map(type => (
                   <PillChip
                     key={type}
                     label={t(`shift_type.${type.toLowerCase().replace(/\s/g, '_')}`)}

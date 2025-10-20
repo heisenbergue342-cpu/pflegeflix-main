@@ -695,6 +695,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Shift Types
     'shift_type.tagschicht': 'Tagschicht',
+    'shift_type.spätschicht': 'Spätschicht',
     'shift_type.nachtschicht': 'Nachtschicht',
     
     // Career Tools
@@ -1550,6 +1551,7 @@ export const translations: Record<Language, Record<string, string>> = {
 
     // Shift Types
     'shift_type.tagschicht': 'Day shift',
+    'shift_type.spätschicht': 'Late shift',
     'shift_type.nachtschicht': 'Night shift',
     
     // Career Tools

@@ -60,10 +60,8 @@ export type AnalyticsEvent =
   | 'error_occurred'
   | 'menu_category_click'
   
-  // Plan Limits
-  | 'limit_warning_shown'
-  | 'limit_block_publish'
-  | 'cta_upgrade_clicked';
+  // Shift selection
+  | 'shift_selected';
 
 export interface AnalyticsEventProps {
   [key: string]: string | number | boolean | undefined;
