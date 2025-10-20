@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +40,13 @@ export function SaveSearchDialog({ open, onOpenChange, filters }: SaveSearchDial
   const [name, setName] = useState('');
   const [emailAlert, setEmailAlert] = useState<'none' | 'daily' | 'weekly'>('none');
   const [saving, setSaving] = useState(false);
+  const [postedValue, setPostedValue] = useState<'24h' | '7d' | '30d' | null>((filters.posted as any) ?? null);
+
+  useEffect(() => {
+    if (open) {
+      setPostedValue((filters.posted as any) ?? null);
+    }
+  }, [open, filters.posted]);
 
   const handleSave = async () => {
     if (!user) {
@@ -52,12 +59,18 @@ export function SaveSearchDialog({ open, onOpenChange, filters }: SaveSearchDial
     }
 
     setSaving(true);
+    const payloadFilters: typeof filters = { ...filters };
+    if (postedValue) {
+      (payloadFilters as any).posted = postedValue;
+    } else {
+      delete (payloadFilters as any).posted;
+    }
     const { error } = await supabase
       .from('saved_searches')
       .insert({
         user_id: user.id,
         name: name.trim(),
-        filters: filters,
+        filters: payloadFilters,
         email_alert: emailAlert,
       });
 
@@ -111,7 +124,8 @@ export function SaveSearchDialog({ open, onOpenChange, filters }: SaveSearchDial
             <Label>{t('search.posted_label')}</Label>
             <div className="mt-2">
               <PostedFilterToggle
-                value={filters.posted}
+                value={postedValue}
+                onChange={setPostedValue}
                 urlSync={false}
               />
             </div>

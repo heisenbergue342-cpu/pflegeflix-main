@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PillChip } from '@/components/PillChip';
 import { SpecialtyFilter } from '@/components/SpecialtyFilter';
 import { Slider } from '@/components/ui/slider';
+import { PostedFilterToggle } from '@/components/PostedFilterToggle';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { supabase } from '@/integrations/supabase/client';
@@ -322,20 +323,13 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
             {/* Veröffentlichung */}
             <section aria-labelledby="posted-heading">
               <h3 id="posted-heading" className="text-lg font-bold mb-3">{t('search.posted_label')}</h3>
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { value: '24h', label: t('search.posted_options.24h') },
-                  { value: '7d', label: t('search.posted_options.7d') },
-                  { value: '30d', label: t('search.posted_options.30d') }
-                ].map(({ value, label }) => (
-                  <PillChip
-                    key={value}
-                    label={label}
-                    selected={localFilters.posted === value}
-                    onClick={() => setLocalFilters(prev => ({ ...prev, posted: value }))}
-                  />
-                ))}
-              </div>
+              <PostedFilterToggle
+                value={localFilters.posted as any}
+                urlSync={false}
+                onChange={(val) =>
+                  setLocalFilters(prev => ({ ...prev, posted: val || undefined }))
+                }
+              />
             </section>
 
             {/* Schichttyp */}

@@ -50,14 +50,27 @@ export function PostedFilterToggle({ value, onChange, urlSync = true }: PostedFi
     }
   };
 
+  const onKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      select(null);
+    }
+  };
+
   return (
-    <div role="radiogroup" aria-label={t("search.posted_label")} className="flex flex-wrap gap-3">
+    <div
+      role="radiogroup"
+      aria-label={t("search.posted_label")}
+      className="flex flex-wrap gap-3"
+      onKeyDown={onKeyDown}
+    >
       {OPTIONS.map((opt) => (
         <PillChip
           key={opt.value}
           label={t(opt.labelKey)}
           selected={selected === opt.value}
           onClick={() => handleClick(opt.value)}
+          role="radio"
           aria-checked={selected === opt.value}
         />
       ))}
