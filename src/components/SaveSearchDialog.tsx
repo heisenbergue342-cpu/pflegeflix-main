@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { PostedFilterToggle } from '@/components/PostedFilterToggle';
 
 interface SaveSearchDialogProps {
   open: boolean;
@@ -104,6 +105,16 @@ export function SaveSearchDialog({ open, onOpenChange, filters }: SaveSearchDial
                 <SelectItem value="weekly">{t('saved_searches.alert_weekly')}</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label>{t('search.posted_label')}</Label>
+            <div className="mt-2">
+              <PostedFilterToggle
+                value={filters.posted}
+                urlSync={false}
+              />
+            </div>
           </div>
         </div>
 

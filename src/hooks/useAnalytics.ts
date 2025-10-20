@@ -24,6 +24,7 @@ export type AnalyticsEvent =
   | 'filter_applied'
   | 'filter_removed'
   | 'search_cleared'
+  | 'filter_change'
   
   // Job Interactions
   | 'job_viewed'

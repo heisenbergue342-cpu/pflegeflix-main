@@ -13,6 +13,7 @@ import EmptyState from '@/components/EmptyState';
 import SEO from '@/components/SEO';
 import { BreadcrumbStructuredData } from '@/components/StructuredData';
 import { SaveSearchDialog } from '@/components/SaveSearchDialog';
+import { PostedFilterToggle } from '@/components/PostedFilterToggle';
 
 interface FilterState {
   cities: string[];
