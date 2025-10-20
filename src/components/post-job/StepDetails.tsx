@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { PillChip } from "@/components/PillChip";
 
 interface StepDetailsProps {
   formData: any;
@@ -46,6 +47,18 @@ export function StepDetails({ formData, updateFormData }: StepDetailsProps) {
     } else {
       updateFormData({ tags: [...tags, tag] });
     }
+  };
+
+  const toggleShiftType = (type: 'Tagschicht' | 'Nachtschicht') => {
+    const current: string[] = Array.isArray(formData.shift_types) ? formData.shift_types : [];
+    const updated = current.includes(type)
+      ? current.filter((t) => t !== type)
+      : [...current, type].slice(0, 2);
+    // Persist array for UI; persist the first selected as single shift_type for schema
+    updateFormData({
+      shift_types: updated,
+      shift_type: updated[0] || "",
+    });
   };
 
   return (
@@ -110,14 +123,17 @@ export function StepDetails({ formData, updateFormData }: StepDetailsProps) {
         </div>
 
         <div>
-          <Label htmlFor="shift_type">{t("job.field.shift_type")}</Label>
-          <Input
-            id="shift_type"
-            value={formData.shift_type}
-            onChange={(e) => updateFormData({ shift_type: e.target.value })}
-            placeholder={t("job.field.shift_placeholder")}
-            className="mt-1"
-          />
+          <Label>{t("job.field.shift_type")}</Label>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {['Tagschicht', 'Nachtschicht'].map((type) => (
+              <PillChip
+                key={type}
+                label={t(`shift_type.${type.toLowerCase().replace(/\s/g, '_')}`)}
+                selected={(formData.shift_types || []).includes(type)}
+                onClick={() => toggleShiftType(type as 'Tagschicht' | 'Nachtschicht')}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

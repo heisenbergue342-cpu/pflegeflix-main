@@ -249,7 +249,7 @@ export default function JobDetails() {
                 <Clock className="w-5 h-5 text-netflix-red" aria-hidden="true" />
                 <div>
                   <div className="text-sm text-netflix-text-muted">{t('job.shift_label')}</div>
-                  <div className="font-semibold">{job.shift_type}</div>
+                  <div className="font-semibold">{job.shift_type || t('search.no_info')}</div>
                 </div>
               </div>
             </div>

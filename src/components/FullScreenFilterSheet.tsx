@@ -40,7 +40,11 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
   const focusTrapRef = useFocusTrap(open);
 
   useEffect(() => {
-    setLocalFilters(filters);
+    // Sanitize shiftTypes from saved filters/sessions: keep only allowed values
+    const allowedShiftTypes = (filters.shiftTypes || []).filter(
+      (t) => t === 'Tagschicht' || t === 'Nachtschicht'
+    );
+    setLocalFilters({ ...filters, shiftTypes: allowedShiftTypes });
   }, [filters]);
 
   // Restore scroll position when reopening
@@ -333,7 +337,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
             <section aria-labelledby="shift-heading">
               <h3 id="shift-heading" className="text-lg font-bold mb-3">{t('job.field.shift_type')}</h3>
               <div className="flex flex-wrap gap-3">
-                {['Tagschicht', 'Nachtschicht', 'Wechselschicht', 'Bereitschaftsdienst'].map(type => (
+                {['Tagschicht', 'Nachtschicht'].map(type => (
                   <PillChip
                     key={type}
                     label={t(`shift_type.${type.toLowerCase().replace(/\s/g, '_')}`)}

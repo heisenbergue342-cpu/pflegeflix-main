@@ -128,8 +128,8 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
             )}
           </div>
 
-          <div className="text-sm text-gray-400" aria-label={t('job.contract_shift_label', { contract_type: job.contract_type, shift_type: job.shift_type })}>
-            {job.contract_type} • {job.shift_type}
+          <div className="text-sm text-gray-400" aria-label={t('job.contract_shift_label', { contract_type: job.contract_type, shift_type: job.shift_type || t('search.no_info') })}>
+            {job.contract_type}{job.shift_type ? ` • ${job.shift_type}` : ''}
           </div>
         </div>
       </div>

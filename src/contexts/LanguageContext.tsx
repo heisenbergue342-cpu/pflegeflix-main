@@ -696,8 +696,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Shift Types
     'shift_type.tagschicht': 'Tagschicht',
     'shift_type.nachtschicht': 'Nachtschicht',
-    'shift_type.wechselschicht': 'Wechselschicht',
-    'shift_type.bereitschaftsdienst': 'Bereitschaftsdienst',
     
     // Career Tools
     'career.title': 'Meine Karriere',
@@ -1553,8 +1551,6 @@ export const translations: Record<Language, Record<string, string>> = {
     // Shift Types
     'shift_type.tagschicht': 'Day shift',
     'shift_type.nachtschicht': 'Night shift',
-    'shift_type.wechselschicht': 'Rotating shift',
-    'shift_type.bereitschaftsdienst': 'On-call duty',
     
     // Career Tools
     'career.title': 'My Career',
