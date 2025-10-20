@@ -26,7 +26,8 @@ interface PhotoUploaderProps {
   idOverride?: string;
 }
 
-const BUCKET = "job-photos";
+const BUCKET = import.meta.env.VITE_SUPABASE_BUCKET_JOB_PHOTOS || "job-photos";
+const SIGNED_URL_SECONDS = Number(import.meta.env.VITE_SUPABASE_SIGNED_URL_SECONDS || 604800); // 7 Tage
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_FILES = 5;
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -84,12 +85,17 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
       return;
     }
     const { data } = await supabase.storage.from(BUCKET).list(basePath, { limit: 20 });
-    const mapped: UploadedPhoto[] = (data || [])
-      .filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json")
-      .map((f, idx) => {
-        const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(`${basePath}/${f.name}`).data.publicUrl;
-        return { name: f.name, path: `${basePath}/${f.name}`, url: publicUrl, isCover: idx === 0 };
-      });
+    const files = (data || []).filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json");
+    const mapped: UploadedPhoto[] = [];
+    for (let idx = 0; idx < files.length; idx++) {
+      const f = files[idx];
+      const path = `${basePath}/${f.name}`;
+      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
+      const url = !signedError && signed?.signedUrl
+        ? signed.signedUrl
+        : supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      mapped.push({ name: f.name, path, url, isCover: idx === 0 });
+    }
     setPhotos(mapped);
     if (mapped.length) await saveMetadata(mapped);
   };
@@ -197,8 +203,11 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
         toast.error(`${t("common.upload_error_network")} (${error.message})`);
         continue;
       }
-      // Step 3: public URL + dimensions
-      const publicUrl = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+      // Step 3: public or signed URL + dimensions
+      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
+      const publicUrl = !signedError && signed?.signedUrl
+        ? signed.signedUrl
+        : supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
       const dims = await getImageDimensionsFromBlob(processedBlob);
       newPhotos.push({
         name: filename,
@@ -222,7 +231,11 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
   const onRemove = async (index: number) => {
     const p = photos[index];
     if (!p) return;
-    await supabase.storage.from(BUCKET).remove([p.path]);
+    const { error } = await supabase.storage.from(BUCKET).remove([p.path]);
+    if (error) {
+      toast.error(`${t("common.upload_error_network")} (${error.message})`);
+      return;
+    }
     const next = photos.filter((_, i) => i !== index);
     if (next.length) next.forEach((ph, i) => (ph.isCover = i === 0));
     setPhotos(next);
@@ -285,7 +298,7 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
         <input
           id="job-photos-input"
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
           multiple
           onChange={(e) => handleFiles(e.target.files)}
           className="hidden"
