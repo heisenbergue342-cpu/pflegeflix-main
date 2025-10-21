@@ -6,15 +6,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function NotificationBell() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const unread = useUnreadTotalCount();
   const { t, language } = useLanguage();
 
   if (!user) return null;
 
-  const destination =
-    profile?.role === "arbeitgeber" ? "/employer/applicants" : "/applications";
+  const destination = "/applications";
   const displayCount = unread > 99 ? "99+" : unread;
   const ariaLabel = `${t("messages.tooltip")} (${unread} ${t("messages.unread")})`;
 
