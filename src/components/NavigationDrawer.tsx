@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   X, Home, Search, Heart, FileText, Building2, Users, Shield, Eye, LogOut, LogIn, UserPlus, 
-  RefreshCw, Settings, ChevronDown, ChevronRight, Bell, Bookmark, User, Sparkles, Briefcase
+  RefreshCw, Settings, ChevronDown, ChevronRight, Mail, Bookmark, User, Sparkles, Briefcase
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -319,7 +319,8 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
                 <NavItem to="/career" icon={Briefcase} label={t('menu.career')} compact />
                 <NavItem to="/saved" icon={Heart} label={t('menu.saved_jobs')} count={savedCount} compact />
                 <NavItem to="/applications" icon={FileText} label={t('menu.applications')} count={applicationsCount} compact />
-                <NavItem to="/applications" icon={Bell} label={t('messages.label')} compact />
+                {/* Duplicate messages link without badge (use Mail icon to match header) */}
+                <NavItem to="/applications" icon={Mail} label={t('messages.label')} compact />
                 <NavItem to="/saved-searches" icon={Bookmark} label={t('saved_searches.title')} compact />
                 <NavItem to="/privacy-settings" icon={Settings} label={t('menu.account_settings')} compact />
               </div>
