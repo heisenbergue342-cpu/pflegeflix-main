@@ -1,15 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Building2, Users, Heart, GripVertical, Hospital } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
-import type { Database } from '@/integrations/supabase/types';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useSearchParams } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type FacilityType = Database['public']['Enums']['facility_type'];
 
@@ -21,35 +11,13 @@ interface Category {
   facility: FacilityType;
 }
 
-const DEFAULT_CATEGORIES: Category[] = [
-  {
-    key: 'clinics',
-    labelDE: 'Kliniken',
-    labelEN: 'Clinics',
-    icon: Building2,
-    facility: 'Klinik',
-  },
-  {
-    key: 'hospitals',
-    labelDE: 'Krankenhäuser',
-    labelEN: 'Hospitals',
-    icon: Hospital,
-    facility: 'Krankenhaus',
-  },
-  {
-    key: 'nursing_homes',
-    labelDE: 'Altenheime',
-    labelEN: 'Nursing Homes',
-    icon: Users,
-    facility: 'Altenheim',
-  },
-  {
-    key: 'intensive',
-    labelDE: '1:1 Intensivpflege',
-    labelEN: '1:1 Intensive Care',
-    icon: Heart,
-    facility: '1zu1',
-  },
+// Canonical category list used for filtering and URL sync
+const CATEGORIES = [
+  { slug: 'clinic', labelKey: 'category.clinics' },
+  { slug: 'hospital', labelKey: 'category.hospitals' },
+  { slug: 'nursing_home', labelKey: 'category.nursing_homes' },
+  { slug: 'intensive_care', labelKey: 'category.intensive_care' },
+  { slug: 'ambulant', labelKey: 'category.outpatient' },
 ];
 
 const STORAGE_KEY_ORDER = 'pflegeflix_category_order';
