@@ -98,10 +98,9 @@ export default function Search() {
 
   const fetchJobs = async () => {
     let query = supabase
-      .from('jobs')
+      .from('jobs_public')
       .select('*')
-      .eq('approved', true)
-      .order('boosted_at', { ascending: false, nullsFirst: false })
+      .eq('is_active', true)
       .order('posted_at', { ascending: false });
 
     // Special handling: 'Ambulante Pflege' filters by tag instead of facility_type

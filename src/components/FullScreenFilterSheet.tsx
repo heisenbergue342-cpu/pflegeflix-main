@@ -68,15 +68,23 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
   useEffect(() => {
     const fetchCount = async () => {
       let query = supabase
-        .from('jobs')
+        .from('jobs_public')
         .select('*', { count: 'exact', head: true })
-        .eq('approved', true);
+        .eq('is_active', true);
 
       if (localFilters.cities.length > 0) {
         query = query.in('city', localFilters.cities);
       }
+      // Einrichtung: 'Ambulante Pflege' über tags, rest als facility_type
       if (localFilters.facilities.length > 0) {
-        query = query.in('facility_type', localFilters.facilities as any);
+        const includesOutpatient = localFilters.facilities.includes('Ambulante Pflege');
+        const facilityTypes = localFilters.facilities.filter(f => f !== 'Ambulante Pflege');
+        if (facilityTypes.length > 0) {
+          query = query.in('facility_type', facilityTypes as any);
+        }
+        if (includesOutpatient) {
+          query = query.contains('tags', ['Ambulante Pflege']);
+        }
       }
       if (localFilters.contracts.length > 0) {
         query = query.in('contract_type', localFilters.contracts as any);
