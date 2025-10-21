@@ -46,11 +46,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
     const allowedShiftTypes = (filters.shiftTypes || []).filter(
       (t) => t === 'Tagschicht' || t === 'Spätschicht' || t === 'Nachtschicht'
     );
-    // Ensure facilities contain only canonical slugs
-    const validFacilities = (filters.facilities || []).filter(
-      (f) => ['clinic', 'hospital', 'nursing_home', 'intensive_care', 'ambulant'].includes(f)
-    );
-    setLocalFilters({ ...filters, shiftTypes: allowedShiftTypes, facilities: validFacilities });
+    setLocalFilters({ ...filters, shiftTypes: allowedShiftTypes });
   }, [filters]);
 
   // Restore scroll position when reopening
@@ -283,28 +279,28 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
               <div className="flex flex-wrap gap-3">
                 <PillChip
                   label={t('category.clinics')}
-                  selected={localFilters.facilities.includes('clinic')}
-                  onClick={() => toggleArrayFilter('facilities', 'clinic')}
+                  selected={localFilters.facilities.includes('Klinik')}
+                  onClick={() => toggleArrayFilter('facilities', 'Klinik')}
                 />
                 <PillChip
                   label={t('category.hospitals')}
-                  selected={localFilters.facilities.includes('hospital')}
-                  onClick={() => toggleArrayFilter('facilities', 'hospital')}
+                  selected={localFilters.facilities.includes('Krankenhaus')}
+                  onClick={() => toggleArrayFilter('facilities', 'Krankenhaus')}
                 />
                 <PillChip
                   label={t('category.nursing_homes')}
-                  selected={localFilters.facilities.includes('nursing_home')}
-                  onClick={() => toggleArrayFilter('facilities', 'nursing_home')}
+                  selected={localFilters.facilities.includes('Altenheim')}
+                  onClick={() => toggleArrayFilter('facilities', 'Altenheim')}
                 />
                 <PillChip
                   label={t('category.intensive_care')}
-                  selected={localFilters.facilities.includes('intensive_care')}
-                  onClick={() => toggleArrayFilter('facilities', 'intensive_care')}
+                  selected={localFilters.facilities.includes('1zu1')}
+                  onClick={() => toggleArrayFilter('facilities', '1zu1')}
                 />
                 <PillChip
                   label={t('category.outpatient')}
-                  selected={localFilters.facilities.includes('ambulant')}
-                  onClick={() => toggleArrayFilter('facilities', 'ambulant')}
+                  selected={localFilters.facilities.includes('Ambulante Pflege')}
+                  onClick={() => toggleArrayFilter('facilities', 'Ambulante Pflege')}
                 />
               </div>
             </section>
