@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,12 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Send, Mail, MailOpen, Briefcase } from 'lucide-react';
+import { Send, Mail, MailOpen, Briefcase, Dot, Check, CheckCheck } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatDistanceToNow } from 'date-fns';
+import { de as deLocale, enUS as enLocale } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Message {
   id: string;
@@ -33,16 +38,25 @@ interface Application {
   };
   messages: Message[];
   unread_count: number;
+  last_message_at?: string | null;
+  last_preview?: string | null;
 }
 
 export function ApplicationInbox() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { language, t } = useLanguage();
+  const [typingFromOther, setTypingFromOther] = useState(false);
+  const typingTimeoutRef = useRef<number | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [filterTab, setFilterTab] = useState<'all' | 'unread'>('all');
+  const [jobFilter, setJobFilter] = useState<string>('all');
 
   useEffect(() => {
     loadApplications();
@@ -57,20 +71,52 @@ export function ApplicationInbox() {
           schema: 'public',
           table: 'application_messages',
         },
-        () => {
+        (payload: any) => {
+          const msg = payload?.new as Message | undefined;
           loadApplications();
           if (selectedApp) {
             loadMessages(selectedApp.id);
+          }
+          if (msg && msg.sender_id !== user?.id) {
+            // Toast: Neue Nachricht
+            toast({
+              title: language === 'de' ? `Neue Nachricht von ${msg.profiles?.name || 'Unbekannt'}` : `New message from ${msg.profiles?.name || 'Unknown'}`,
+            });
+            // Auto-scroll nur im aktiven Thread
+            if (selectedApp && msg.application_id === selectedApp.id) {
+              setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+              }, 50);
+            }
           }
         }
       )
       .subscribe();
 
+    // Typing Indicator via Broadcast
+    const typingChannel = supabase
+      .channel('inbox-typing', { config: { broadcast: { self: true } } })
+      .on('broadcast', { event: 'typing' }, (payload: any) => {
+        const { application_id, user_id } = payload?.payload || {};
+        if (application_id && selectedApp?.id === application_id && user_id && user_id !== user?.id) {
+          setTypingFromOther(true);
+          if (typingTimeoutRef.current) {
+            window.clearTimeout(typingTimeoutRef.current);
+          }
+          typingTimeoutRef.current = window.setTimeout(() => setTypingFromOther(false), 2000);
+        }
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(typingChannel);
+      if (typingTimeoutRef.current) {
+        window.clearTimeout(typingTimeoutRef.current);
+      }
     };
   }, []);
-
+ 
   useEffect(() => {
     if (selectedApp) {
       loadMessages(selectedApp.id);
@@ -91,21 +137,40 @@ export function ApplicationInbox() {
       .order('created_at', { ascending: false });
 
     if (data) {
-      // Load unread counts for each application
-      const appsWithCounts = await Promise.all(
+      // Load unread counts and last message for each application
+      const appsWithMeta = await Promise.all(
         data.map(async (app: any) => {
-          const { count } = await supabase
-            .from('application_messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('application_id', app.id)
-            .neq('sender_id', user?.id)
-            .is('read_at', null);
-          
-          return { ...app, unread_count: count || 0 };
+          const [{ count: unreadCount }, { data: lastMsgs }] = await Promise.all([
+            supabase
+              .from('application_messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('application_id', app.id)
+              .neq('sender_id', user?.id)
+              .is('read_at', null),
+            supabase
+              .from('application_messages')
+              .select('id, message, created_at')
+              .eq('application_id', app.id)
+              .order('created_at', { ascending: false })
+              .limit(1),
+          ]);
+          const last = (lastMsgs || [])[0] as any;
+          const lastPreview = last?.message ? String(last.message).slice(0, 60) : null;
+          return { 
+            ...app, 
+            unread_count: unreadCount || 0,
+            last_message_at: last?.created_at || null,
+            last_preview: lastPreview,
+          };
         })
       );
-      
-      setApplications(appsWithCounts);
+      // Sort by last_message_at desc
+      appsWithMeta.sort((a, b) => {
+        const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+        const tb = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+        return tb - ta;
+      });
+      setApplications(appsWithMeta);
     }
   };
 
@@ -120,6 +185,10 @@ export function ApplicationInbox() {
       .order('created_at', { ascending: true });
     
     setMessages((data as any) || []);
+    // Scroll to bottom after load
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
   };
 
   const markMessagesAsRead = async (applicationId: string) => {
@@ -147,9 +216,9 @@ export function ApplicationInbox() {
     if (!error) {
       setNewMessage('');
       loadMessages(selectedApp.id);
-      toast({ title: 'Nachricht gesendet' });
+      toast({ title: t('application.message_sent_toast') || 'Nachricht gesendet' });
     } else {
-      toast({ title: 'Fehler beim Senden', variant: 'destructive' });
+      toast({ title: t('application.error_sending_message') || 'Fehler beim Senden', variant: 'destructive' });
     }
   };
 
@@ -175,19 +244,57 @@ export function ApplicationInbox() {
     return labels[stage] || stage;
   };
 
+  const localeObj = useMemo(() => (language === 'de' ? deLocale : enLocale), [language]);
+  const relativeTime = (dateStr?: string | null) => {
+    if (!dateStr) return '';
+    return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: localeObj });
+  };
+
+  const filteredApplications = useMemo(() => {
+    let list = [...applications];
+    if (filterTab === 'unread') {
+      list = list.filter(a => (a.unread_count || 0) > 0);
+    }
+    if (jobFilter !== 'all') {
+      list = list.filter(a => a.jobs.title === jobFilter);
+    }
+    return list;
+  }, [applications, filterTab, jobFilter]);
+
   return (
     <div className="grid md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
       {/* Applications List */}
       <Card className="bg-card border-border overflow-hidden">
         <div className="p-4 border-b border-border">
-          <h3 className="font-semibold text-foreground flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Bewerbungen
-          </h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {t('application.inbox_title')}
+            </h3>
+            <div className="flex items-center gap-3">
+              <Tabs value={filterTab} onValueChange={(v: any) => setFilterTab(v)}>
+                <TabsList className="bg-muted">
+                  <TabsTrigger value="all">{t('applicants.all') || 'Alle'}</TabsTrigger>
+                  <TabsTrigger value="unread">{t('messages.unread') || 'Ungelesen'}</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Select value={jobFilter} onValueChange={(v) => setJobFilter(v)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder={t('applicants.filter_job')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('applicants.all_jobs')}</SelectItem>
+                  {Array.from(new Set(applications.map(a => a.jobs.title))).map(title => (
+                    <SelectItem key={title} value={title}>{title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
         <ScrollArea className="h-[calc(100%-4rem)]">
           <div className="p-2 space-y-2">
-            {applications.map((app) => (
+            {filteredApplications.map((app) => (
               <button
                 key={app.id}
                 onClick={() => setSelectedApp(app)}
@@ -199,12 +306,23 @@ export function ApplicationInbox() {
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="font-medium text-foreground text-sm line-clamp-1">
-                      {app.jobs.title}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {app.jobs.city}, {app.jobs.state}
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <h4 className={`text-foreground text-sm line-clamp-1 ${app.unread_count > 0 ? 'font-bold' : 'font-medium'}`}>
+                        {app.jobs.title}
+                      </h4>
+                      {app.unread_count > 0 && <Dot className="h-4 w-4 text-netflix-red" aria-hidden="true" />}
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {app.jobs.city}, {app.jobs.state}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{relativeTime(app.last_message_at)}</p>
+                    </div>
+                    {app.last_preview && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                        {app.last_preview}
+                      </p>
+                    )}
                   </div>
                   {app.unread_count > 0 && (
                     <Badge className="bg-netflix-red text-white text-xs">
@@ -235,9 +353,14 @@ export function ApplicationInbox() {
                   </p>
                 </div>
               </div>
+              {typingFromOther && (
+                <div className="mt-2 text-xs text-muted-foreground" aria-live="polite">
+                  {language === 'de' ? 'tippt…' : 'typing…'}
+                </div>
+              )}
             </div>
 
-            <ScrollArea className="flex-1 p-4">
+            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef as any}>
               <div className="space-y-4">
                 {messages.map((msg) => (
                   <div
@@ -255,8 +378,14 @@ export function ApplicationInbox() {
                       <span className="text-xs text-muted-foreground">
                         {new Date(msg.created_at).toLocaleString()}
                       </span>
-                      {msg.sender_id !== user?.id && msg.read_at && (
-                        <MailOpen className="h-3 w-3 text-muted-foreground" />
+                      {/* Status-Ticks */}
+                      {msg.sender_id === user?.id ? (
+                        <span className="ml-auto flex items-center gap-1">
+                          <Check className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                          <CheckCheck className={`h-3 w-3 ${msg.read_at ? 'text-blue-500' : 'text-muted-foreground'}`} aria-hidden="true" />
+                        </span>
+                      ) : (
+                        msg.read_at && <MailOpen className="h-3 w-3 text-muted-foreground" />
                       )}
                     </div>
                     <p className="text-sm text-foreground whitespace-pre-wrap">
@@ -264,6 +393,7 @@ export function ApplicationInbox() {
                     </p>
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
@@ -273,7 +403,17 @@ export function ApplicationInbox() {
               <div className="flex gap-2">
                 <Textarea
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    // Broadcast typing
+                    if (selectedApp) {
+                      supabase.channel('inbox-typing').send({
+                        type: 'broadcast',
+                        event: 'typing',
+                        payload: { application_id: selectedApp.id, user_id: user?.id },
+                      });
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -294,7 +434,7 @@ export function ApplicationInbox() {
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
               <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Wählen Sie eine Bewerbung aus, um Nachrichten zu sehen</p>
+              <p>{t('application.select_app_message')}</p>
             </div>
           </div>
         )}

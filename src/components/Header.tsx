@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import NotificationBell from '@/components/NotificationBell';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import NavigationDrawer from '@/components/NavigationDrawer';
@@ -43,6 +44,7 @@ export default function Header() {
           {/* Intentionally empty on desktop: Search and language are available in the Menu and Footer. */}
 
           <div className="flex items-center gap-4">
+            <NotificationBell />
             {user ? (
               <Button 
                 onClick={handleSignOut} 
