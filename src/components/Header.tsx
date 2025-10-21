@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import NavigationDrawer from '@/components/NavigationDrawer';
+import CategoriesDropdown from '@/components/CategoriesDropdown';
 
 export default function Header() {
   const { t } = useLanguage();
@@ -38,9 +39,13 @@ export default function Header() {
             <Link to="/" className="flex items-center gap-2">
               <div className="text-2xl font-bold text-netflix-red leading-none">Pflegeflix</div>
             </Link>
+            {/* Desktop-only categories dropdown */}
+            <div className="ml-2">
+              <CategoriesDropdown />
+            </div>
           </div>
 
-          {/* Intentionally empty on desktop: Search and language are available in the Menu and Footer. */}
+          {/* Keep top bar minimal: other links remain in the hamburger menu */}
 
           <div className="flex items-center gap-4">
             {user ? (
