@@ -18,7 +18,7 @@ import { PostedFilterToggle } from '@/components/PostedFilterToggle';
 interface FilterState {
   cities: string[];
   radius?: number;
-  facilities: string[];
+  facilities: string[]; // stores canonical slugs (clinic | hospital | nursing_home | intensive_care | ambulant)
   contracts: string[];
   posted?: string;
   specialties: string[];
@@ -26,6 +26,20 @@ interface FilterState {
   salaryMax?: number;
   shiftTypes: string[];
 }
+
+// Canonical slug -> DB enum/tag mapping
+const FACILITY_MAP: Record<string, { db?: 'Klinik' | 'Krankenhaus' | 'Altenheim' | '1zu1'; tag?: 'Ambulante Pflege' }> = {
+  clinic: { db: 'Klinik' },
+  hospital: { db: 'Krankenhaus' },
+  nursing_home: { db: 'Altenheim' },
+  intensive_care: { db: '1zu1' },
+  ambulant: { tag: 'Ambulante Pflege' },
+};
+
+const parseFacilityParam = (param: string | null): string[] => {
+  if (!param) return [];
+  return param.split(',').map(s => s.trim()).filter(s => !!FACILITY_MAP[s]);
+};
 
 export default function Search() {
   const { t } = useLanguage();
@@ -81,7 +95,8 @@ export default function Search() {
     const newFilters: FilterState = {
       cities: searchParams.get('cities')?.split(',').filter(Boolean) || [],
       radius: searchParams.get('radius') ? parseInt(searchParams.get('radius')!) : undefined,
-      facilities: searchParams.get('facilities')?.split(',').filter(Boolean) || [],
+      // Prefer canonical facility_type; fall back to legacy 'facilities' if present
+      facilities: parseFacilityParam(searchParams.get('facility_type')) || [],
       contracts: searchParams.get('contracts')?.split(',').filter(Boolean) || [],
       posted: searchParams.get('posted') || undefined,
       specialties: searchParams.get('specialties')?.split(',').filter(Boolean) || [],
@@ -104,9 +119,12 @@ export default function Search() {
       .order('boosted_at', { ascending: false, nullsFirst: false })
       .order('posted_at', { ascending: false });
 
-    // Special handling: 'Ambulante Pflege' filters by tag instead of facility_type
-    const includesOutpatient = filters.facilities.includes('Ambulante Pflege');
-    const facilityTypes = filters.facilities.filter(f => f !== 'Ambulante Pflege');
+    // Facility type mapping: slugs -> DB enum OR tag (ambulant)
+    const selectedFacilitySlugs = filters.facilities || [];
+    const dbFacilityTypes: string[] = selectedFacilitySlugs
+      .map(slug => FACILITY_MAP[slug]?.db)
+      .filter(Boolean) as string[];
+    const includesAmbulant = selectedFacilitySlugs.includes('ambulant');
 
     if (searchQuery) {
       query = query.or(`title.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
@@ -115,11 +133,17 @@ export default function Search() {
     if (filters.cities.length > 0) {
       query = query.in('city', filters.cities);
     }
-    if (facilityTypes.length > 0) {
-      query = query.in('facility_type', facilityTypes as any);
-    }
-    if (includesOutpatient) {
-      query = query.contains('tags', ['Ambulante Pflege']);
+    // OR across selected categories: any of the chosen facility types or ambulant tag
+    if (dbFacilityTypes.length > 0 && includesAmbulant) {
+      // Combine facility_type IN (...) OR tags @> ['Ambulante Pflege']
+      // Postgrest: use or() with gte on tags array via contains
+      // Note: we need to construct a disjunction; use `.or(...)`
+      const inList = dbFacilityTypes.map(v => `facility_type.eq.${v}`).join(',');
+      query = query.or(`${inList},tags.cs.{${FACILITY_MAP.ambulant.tag}}`);
+    } else if (dbFacilityTypes.length > 0) {
+      query = query.in('facility_type', dbFacilityTypes as any);
+    } else if (includesAmbulant) {
+      query = query.contains('tags', [FACILITY_MAP.ambulant.tag]);
     }
     if (filters.contracts.length > 0) {
       query = query.in('contract_type', filters.contracts as any);
@@ -170,7 +194,7 @@ export default function Search() {
     const params = new URLSearchParams();
     if (newFilters.cities.length > 0) params.set('cities', newFilters.cities.join(','));
     if (newFilters.radius) params.set('radius', newFilters.radius.toString());
-    if (newFilters.facilities.length > 0) params.set('facilities', newFilters.facilities.join(','));
+    if (newFilters.facilities.length > 0) params.set('facility_type', newFilters.facilities.join(','));
     if (newFilters.contracts.length > 0) params.set('contracts', newFilters.contracts.join(','));
     if (newFilters.posted) params.set('posted', newFilters.posted);
     if (newFilters.specialties.length > 0) params.set('specialties', newFilters.specialties.join(','));
@@ -183,8 +207,8 @@ export default function Search() {
     // Track analytics event (consent-aware)
     import('@/hooks/useAnalytics').then(({ trackAnalyticsEvent }) => {
       const payload: any = { activeFilters: activeFilterCount + 0 };
-      if (newFilters.facilities.includes('Ambulante Pflege')) {
-        payload.category = 'ambulant';
+      if (newFilters.facilities.length > 0) {
+        payload.facility_type = newFilters.facilities; // canonical slugs
       }
       trackAnalyticsEvent('filter_applied', payload);
     });
@@ -306,16 +330,16 @@ export default function Search() {
           <div className="mb-6 flex flex-wrap gap-2">
             {filters.facilities.map(f => (
               <Badge key={f} variant="secondary" className="gap-1 pr-1">
-                {f === 'Klinik' ? t('category.clinics')
-                  : f === 'Krankenhaus' ? t('category.hospitals')
-                  : f === 'Altenheim' ? t('category.nursing_homes')
-                  : f === '1zu1' ? t('category.intensive_care')
-                  : f === 'Ambulante Pflege' ? t('category.outpatient')
+                {f === 'clinic' ? t('category.clinics')
+                  : f === 'hospital' ? t('category.hospitals')
+                  : f === 'nursing_home' ? t('category.nursing_homes')
+                  : f === 'intensive_care' ? t('category.intensive_care')
+                  : f === 'ambulant' ? t('category.outpatient')
                   : f}
                 <button
                   onClick={() => removeFilter('facilities', f)}
                   className="ml-1 hover:bg-primary/20 rounded-full p-0.5"
-                  aria-label={t('search.remove_filter', { filter: f === 'Klinik' ? t('category.clinics') : f === 'Krankenhaus' ? t('category.hospitals') : f })}
+                  aria-label={t('search.remove_filter', { filter: f === 'clinic' ? t('category.clinics') : f === 'hospital' ? t('category.hospitals') : f })}
                 >
                   <X className="w-3 h-3" aria-hidden="true" />
                 </button>
