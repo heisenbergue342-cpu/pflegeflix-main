@@ -2,30 +2,47 @@ import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUnreadTotalCount } from "@/hooks/useUnread";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function NotificationBell() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const unread = useUnreadTotalCount();
+  const { t, language } = useLanguage();
 
   if (!user) return null;
 
+  const destination =
+    profile?.role === "arbeitgeber" ? "/employer/applicants" : "/applications";
+  const displayCount = unread > 99 ? "99+" : unread;
+  const ariaLabel = `${t("messages.tooltip")} (${unread} ${t("messages.unread")})`;
+
   return (
-    <button
-      type="button"
-      onClick={() => navigate("/applications")}
-      className="relative inline-flex items-center justify-center rounded-full p-2 text-netflix-text hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 focus-visible:ring-offset-netflix-bg"
-      aria-label="Benachrichtigungen öffnen"
-    >
-      <Bell className="w-6 h-6" aria-hidden="true" />
-      {unread > 0 && (
-        <span
-          className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-netflix-red text-white text-[10px] font-semibold leading-4 text-center"
-          aria-label={`${unread} ungelesene Nachrichten`}
-        >
-          {unread}
-        </span>
-      )}
-    </button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => navigate(destination)}
+            className="relative inline-flex items-center justify-center rounded-full min-w-[40px] min-h-[40px] p-2 text-netflix-text hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 focus-visible:ring-offset-netflix-bg"
+            aria-label={ariaLabel}
+          >
+            <Bell className="w-7 h-7" aria-hidden="true" />
+            {unread > 0 && (
+              <span
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-netflix-red text-white text-[10px] font-semibold leading-4 text-center"
+                aria-label={`${displayCount} ${t("messages.unread")}`}
+              >
+                {displayCount}
+              </span>
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <span>{t("messages.tooltip")}</span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

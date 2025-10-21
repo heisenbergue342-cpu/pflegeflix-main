@@ -25,7 +25,8 @@ export default function Header() {
         <a href="#main-content" className="skip-to-main">
           Skip to main content
         </a>
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 grid grid-cols-3 items-center">
+          {/* Left: Menu + Logo */}
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setDrawerOpen(true)}
@@ -41,10 +42,13 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Intentionally empty on desktop: Search and language are available in the Menu and Footer. */}
-
-          <div className="flex items-center gap-4">
+          {/* Center: Messages Bell */}
+          <div className="flex items-center justify-center">
             <NotificationBell />
+          </div>
+
+          {/* Right: Auth actions */}
+          <div className="flex items-center gap-4 justify-end">
             {user ? (
               <Button 
                 onClick={handleSignOut} 

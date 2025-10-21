@@ -319,6 +319,7 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
                 <NavItem to="/career" icon={Briefcase} label={t('menu.career')} compact />
                 <NavItem to="/saved" icon={Heart} label={t('menu.saved_jobs')} count={savedCount} compact />
                 <NavItem to="/applications" icon={FileText} label={t('menu.applications')} count={applicationsCount} compact />
+                <NavItem to="/applications" icon={Bell} label={t('messages.label')} compact />
                 <NavItem to="/saved-searches" icon={Bookmark} label={t('saved_searches.title')} compact />
                 <NavItem to="/privacy-settings" icon={Settings} label={t('menu.account_settings')} compact />
               </div>
