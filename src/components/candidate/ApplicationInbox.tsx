@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDistanceToNow } from 'date-fns';
 import { de as deLocale, enUS as enLocale } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessagesCount";
 
 interface Message {
   id: string;
@@ -57,6 +58,7 @@ export function ApplicationInbox() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [filterTab, setFilterTab] = useState<'all' | 'unread'>('all');
   const [jobFilter, setJobFilter] = useState<string>('all');
+  const unreadMessagesCount = useUnreadMessagesCount(); // Live update header badge when thread opened
 
   useEffect(() => {
     loadApplications();
@@ -123,6 +125,11 @@ export function ApplicationInbox() {
       markMessagesAsRead(selectedApp.id);
     }
   }, [selectedApp]);
+ 
+  // Refresh inbox list when unreadMessagesCount changes (e.g., new message arrives)
+  useEffect(() => {
+    loadApplications();
+  }, [unreadMessagesCount]);
 
   const loadApplications = async () => {
     const { data } = await supabase

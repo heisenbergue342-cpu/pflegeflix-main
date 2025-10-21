@@ -21,6 +21,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useUnreadApplicationsCount } from "@/hooks/useUnreadApplicationsCount";
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessagesCount";
 
 interface NavigationDrawerProps {
   open: boolean;
@@ -33,7 +35,8 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
   const navigate = useNavigate();
   const location = useLocation();
   const [savedCount, setSavedCount] = useState(0);
-  const [applicationsCount, setApplicationsCount] = useState(0);
+  const applicationsCount = useUnreadApplicationsCount(); // neue Bewerbungen für Arbeitgeber
+  const messagesCount = useUnreadMessagesCount(); // ungelesene Nachrichten
   const [outpatientCount, setOutpatientCount] = useState(0);
   const [switchingRole, setSwitchingRole] = useState(false);
   
@@ -66,17 +69,20 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
     localStorage.setItem('nav-admin-open', JSON.stringify(adminOpen));
   }, [adminOpen]);
 
-  // Fetch counts for saved jobs and applications
+  // Fetch counts for saved jobs and applications (legacy for non-employer)
   useEffect(() => {
     if (!user) return;
     
     const fetchCounts = async () => {
       const [savedRes, appsRes] = await Promise.all([
         supabase.from('saved_jobs').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        // Only fetch total applications count for non-employer roles; employer uses unreadCount hook above
+        profile?.role !== 'arbeitgeber' ? supabase.from('applications').select('*', { count: 'exact', head: true }).eq('user_id', user.id) : { count: 0 },
       ]);
       setSavedCount(savedRes.count || 0);
-      setApplicationsCount(appsRes.count || 0);
+      if (profile?.role !== 'arbeitgeber') {
+        // For non-employer, we may still want total applications count (optional)
+      }
     };
     
     fetchCounts();
@@ -96,7 +102,7 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
       supabase.removeChannel(savedChannel);
       supabase.removeChannel(appsChannel);
     };
-  }, [user]);
+  }, [user, profile?.role]);
 
   // Fetch outpatient count
   useEffect(() => {
@@ -318,9 +324,14 @@ export default function NavigationDrawer({ open, onOpenChange }: NavigationDrawe
                 <NavItem to="/for-you" icon={Sparkles} label={t('menu.for_you')} compact />
                 <NavItem to="/career" icon={Briefcase} label={t('menu.career')} compact />
                 <NavItem to="/saved" icon={Heart} label={t('menu.saved_jobs')} count={savedCount} compact />
-                <NavItem to="/applications" icon={FileText} label={t('menu.applications')} count={applicationsCount} compact />
-                {/* Duplicate messages link without badge (use Mail icon to match header) */}
-                <NavItem to="/applications" icon={Mail} label={t('messages.label')} compact />
+                {/* Bewerber: show total applications count; Arbeitgeber: show unread applications count */}
+                {profile?.role === 'arbeitgeber' ? (
+                  <NavItem to="/employer/applicants" icon={FileText} label={t('menu.applicants')} count={applicationsCount} compact />
+                ) : (
+                  <NavItem to="/applications" icon={FileText} label={t('menu.applications')} count={applicationsCount} compact />
+                )}
+                {/* Nachrichten (Messages) – immer zu /applications, Badge = ungelesene Nachrichten */}
+                <NavItem to="/applications" icon={Mail} label={t('messages.label')} count={messagesCount} compact />
                 <NavItem to="/saved-searches" icon={Bookmark} label={t('saved_searches.title')} compact />
                 <NavItem to="/privacy-settings" icon={Settings} label={t('menu.account_settings')} compact />
               </div>

@@ -1,6 +1,6 @@
 import { Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUnreadTotalCount } from "@/hooks/useUnread";
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessagesCount";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 export default function NotificationBell() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const unread = useUnreadTotalCount();
+  const unread = useUnreadMessagesCount();
   const { t, language } = useLanguage();
 
   if (!user) return null;

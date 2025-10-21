@@ -17,6 +17,7 @@ import { Search, Download, Star, UserCheck, UserX, Users, Briefcase } from 'luci
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import SEO from '@/components/SEO';
+import { useUnreadApplicationsCount } from "@/hooks/useUnreadApplicationsCount";
 
 interface Applicant {
   id: string;
@@ -59,7 +60,7 @@ export default function EmployerApplicants() {
   const [loading, setLoading] = useState(true);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set()); // Corrected useState initialization
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Filters from URL
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
@@ -68,6 +69,7 @@ export default function EmployerApplicants() {
   const [tab, setTab] = useState(searchParams.get('tab') || 'all');
   
   const [jobs, setJobs] = useState<any[]>([]);
+  const unreadApplicationsCount = useUnreadApplicationsCount(); // Live update when new applications arrive
 
   // Analytics
   const [analytics, setAnalytics] = useState({
@@ -86,10 +88,15 @@ export default function EmployerApplicants() {
     }
   }, [user]);
 
+  // Refresh applicants list when unreadApplicationsCount changes (e.g., new application arrives)
+  useEffect(() => {
+    loadApplicants();
+  }, [unreadApplicationsCount]);
+
   useEffect(() => {
     applyFilters();
   }, [applicants, searchTerm, stageFilter, jobFilter, tab]);
-
+ 
   useEffect(() => {
     // Update URL params
     const params: any = {};
