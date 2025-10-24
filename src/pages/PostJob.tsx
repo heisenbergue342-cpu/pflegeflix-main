@@ -23,41 +23,20 @@ export default function PostJob() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [canPost, setCanPost] = useState<boolean | null>(null);
-  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
-  const [publishSuccess, setPublishSuccess] = useState(false);
-  const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
-  // Track when we are editing an existing job (not a draft)
-  const [editingJobId, setEditingJobId] = useState<string | null>(null);
-  // New: track whether we're still loading draft/job information (to avoid showing paywall prematurely)
-  const [loadingDraftOrJob, setLoadingDraftOrJob] = useState<boolean>(!!draftId);
-  // Gentle upgrade modal when attempting to exceed limit
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const FREE_PLAN_ACTIVE_LIMIT = 20;
-  const [formData, setFormData] = useState<any>({
-    title: "",
-    facility_id: null,
-    facility_type: null,
-    city: "",
-    state: "",
-    description: "",
-    requirements: [],
-    tags: [],
-    shift_type: "",
-    salary_min: null,
-    salary_max: null,
-    salary_unit: null,
-    contract_type: null,
-    featured: false,
-    application_method: "email",
-    application_email: "",
-    application_url: "",
-    auto_reply_template: "",
-    contact_person: "",
-    acceptedTerms: false,
-  });
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  const {
+    formData,
+    currentStep,
+    setCurrentStep,
+    updateFormData,
+    saveDraft,
+    publishJob,
+    canPost,
+    subscriptionInfo,
+    editingJobId,
+    loadingDraftOrJob,
+    hasUnsavedChanges,
+  } = useJobPosting(draftId);
 
   const totalSteps = 5;
 
