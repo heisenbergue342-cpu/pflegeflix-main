@@ -23,20 +23,41 @@ export default function PostJob() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
-
-  const {
-    formData,
-    currentStep,
-    setCurrentStep,
-    updateFormData,
-    saveDraft,
-    publishJob,
-    canPost,
-    subscriptionInfo,
-    editingJobId,
-    loadingDraftOrJob,
-    hasUnsavedChanges,
-  } = useJobPosting(draftId);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [canPost, setCanPost] = useState<boolean | null>(null);
+  const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
+  const [publishSuccess, setPublishSuccess] = useState(false);
+  const [publishedJobId, setPublishedJobId] = useState<string | null>(null);
+  // Track when we are editing an existing job (not a draft)
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
+  // New: track whether we're still loading draft/job information (to avoid showing paywall prematurely)
+  const [loadingDraftOrJob, setLoadingDraftOrJob] = useState<boolean>(!!draftId);
+  // Gentle upgrade modal when attempting to exceed limit
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const FREE_PLAN_ACTIVE_LIMIT = 20;
+  const [formData, setFormData] = useState<any>({
+    title: "",
+    facility_id: null,
+    facility_type: null,
+    city: "",
+    state: "",
+    description: "",
+    requirements: [],
+    tags: [],
+    shift_type: "",
+    salary_min: null,
+    salary_max: null,
+    salary_unit: null,
+    contract_type: null,
+    featured: false,
+    application_method: "email",
+    application_email: "",
+    application_url: "",
+    auto_reply_template: "",
+    contact_person: "",
+    acceptedTerms: false,
+  });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const totalSteps = 5;
 
@@ -109,8 +130,6 @@ export default function PostJob() {
           setLoadingDraftOrJob(false);
           return;
         }
-        // Zeige Loading während Draft erstellt wird
-        setLoadingDraftOrJob(true);
         const { data: newDraft, error: createError } = await supabase
           .from("draft_jobs")
           .insert({
@@ -124,11 +143,10 @@ export default function PostJob() {
           // Navigate to the new draft route; subsequent effect will load it
           navigate(`/employer/post/${newDraft.id}`, { replace: true });
           return;
-        } else {
-          toast.error("Fehler beim Erstellen des Entwurfs. Bitte versuche es erneut.");
-          setLoadingDraftOrJob(false);
-          return;
         }
+        // Fallback: if creation failed, continue without blocking the UI
+        setLoadingDraftOrJob(false);
+        return;
       }
 
       // Try loading as draft first
