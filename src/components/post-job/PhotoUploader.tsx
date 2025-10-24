@@ -10,7 +10,7 @@ import { X, UploadCloud, ArrowUpCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { JOB_PHOTOS_BUCKET } from "@/utils/storage";
+import { getJobPhotosBucket, setJobPhotosBucketOverride } from "@/utils/storage";
 
 type UploadedPhoto = {
   name: string;
@@ -27,7 +27,7 @@ interface PhotoUploaderProps {
   idOverride?: string;
 }
 
-const BUCKET = JOB_PHOTOS_BUCKET;
+let BUCKET = getJobPhotosBucket();
 const SIGNED_URL_SECONDS = Number(import.meta.env.VITE_SUPABASE_SIGNED_URL_SECONDS || 604800); // 7 Tage
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_FILES = 5;
@@ -161,6 +161,7 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
   };
 
   const preflightStorage = async (): Promise<string | null> => {
+    BUCKET = getJobPhotosBucket(); // sicherstellen, dass wir immer den aktuellen Wert nutzen
     const { error } = await supabase.storage.from(BUCKET).list(basePath, { limit: 1 });
     if (error) return error.message || "unknown error";
     return null;
@@ -172,14 +173,30 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     if (preflightError) {
       const lower = preflightError.toLowerCase();
       if (lower.includes("bucket") && lower.includes("not found")) {
-        // Give a precise, actionable hint including the expected bucket name
-        toast.error(
-          `Bucket "${BUCKET}" nicht gefunden. Bitte in Supabase Storage einen Bucket mit genau diesem Namen anlegen ODER in deiner .env den korrekten Namen setzen (VITE_SUPABASE_BUCKET_JOB_PHOTOS).`
+        // Interaktive Eingabe des korrekten Bucket-Namens mit sofortigem Retry
+        const suggested = BUCKET || "job-photos";
+        const input = window.prompt(
+          `Bucket "${suggested}" nicht gefunden.\nBitte gib den korrekten Bucket-Namen aus deinem Supabase Storage ein:`,
+          suggested
         );
+        if (input && input.trim().length > 0) {
+          BUCKET = setJobPhotosBucketOverride(input.trim());
+          toast.success(`Bucket gesetzt: "${BUCKET}". Upload wird erneut versucht…`);
+          // Retry Preflight & Upload
+          const retryPreflight = await preflightStorage();
+          if (retryPreflight) {
+            toast.error(`Preflight fehlgeschlagen: ${retryPreflight}`);
+            return;
+          }
+          // Fällt unten in den Upload-Durchlauf
+        } else {
+          toast.error(`Upload abgebrochen: kein gültiger Bucket-Name angegeben.`);
+          return;
+        }
       } else {
         toast.error(`${t("common.upload_error_network")} (${preflightError})`);
+        return;
       }
-      return;
     }
     const currentCount = photos.length;
     const allowed = Math.max(0, MAX_FILES - currentCount);
@@ -199,26 +216,26 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
       const processedBlob = await convertToWebP(file);
       // Step 2: upload
       const ext = "webp";
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const path = `${basePath}/${filename}`;
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const path = `${basePath}/${fileName}`;
       setProgress(Math.round(((i + 0.5) / filesArr.length) * 100));
-      const { error } = await supabase.storage.from(BUCKET).upload(path, processedBlob, {
+      // BUCKET im Upload verwenden (ggf. gerade via Override gesetzt)
+      const uploadRes = await supabase.storage.from(BUCKET).upload(`${basePath}/${fileName}`, file, {
         cacheControl: "3600",
         upsert: false,
-        contentType: "image/webp",
       });
-      if (error) {
-        toast.error(`${t("common.upload_error_network")} (${error.message})`);
+      if (uploadRes.error) {
+        toast.error(`${t("common.upload_error_network")} (${uploadRes.error.message})`);
         continue;
       }
       // Step 3: public or signed URL + dimensions
-      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
+      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(`${basePath}/${fileName}`, 60 * 60 * 24 * 7);
       const publicUrl = !signedError && signed?.signedUrl
         ? signed.signedUrl
-        : supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+        : supabase.storage.from(BUCKET).getPublicUrl(`${basePath}/${fileName}`).data.publicUrl;
       const dims = await getImageDimensionsFromBlob(processedBlob);
       newPhotos.push({
-        name: filename,
+        name: fileName,
         path,
         url: publicUrl,
         width: dims.width,

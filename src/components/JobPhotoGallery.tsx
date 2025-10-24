@@ -2,13 +2,13 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { JOB_PHOTOS_BUCKET } from "@/utils/storage";
+import { getJobPhotosBucket } from "@/utils/storage";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const BUCKET = JOB_PHOTOS_BUCKET;
+const BUCKET = getJobPhotosBucket();
 
 type MetaItem = {
   url: string;
