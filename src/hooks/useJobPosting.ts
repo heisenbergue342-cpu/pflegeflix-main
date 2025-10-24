@@ -15,6 +15,8 @@ export function useJobPosting(draftId?: string) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const ENV_URL = import.meta.env.VITE_SUPABASE_URL;
+  const ENV_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   const [canPost, setCanPost] = useState<boolean | null>(null);
   const [subscriptionInfo, setSubscriptionInfo] = useState<any>(null);
@@ -54,6 +56,19 @@ export function useJobPosting(draftId?: string) {
         return;
       }
 
+      // Diagnose: Missing Supabase env configuration
+      const SUPABASE_CONFIG_OK = !!ENV_URL && !!ENV_KEY;
+      if (!SUPABASE_CONFIG_OK) {
+        toast({
+          title: "Supabase nicht konfiguriert",
+          description: "Bitte setze VITE_SUPABASE_URL und VITE_SUPABASE_PUBLISHABLE_KEY in deiner .env-Datei.",
+          variant: "destructive",
+        });
+        // Erlaube den Wizard weiter, statt hart zu blockieren
+        setCanPost(true);
+        return;
+      }
+
       if (PAYWALL_DISABLED) {
         setCanPost(true);
         setSubscriptionInfo({
@@ -73,9 +88,17 @@ export function useJobPosting(draftId?: string) {
           .in("role", ["arbeitgeber", "admin"])
           .maybeSingle();
 
+        // Fallback: wenn kein Eintrag in user_roles, prüfe Profile-Rolle
         if (!roleData) {
-          navigate("/");
-          return;
+          const { data: profileRole } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (!profileRole || (profileRole.role !== "arbeitgeber" && profileRole.role !== "admin")) {
+            navigate("/");
+            return;
+          }
         }
 
         const { data: subData } = await supabase
@@ -265,7 +288,11 @@ export function useJobPosting(draftId?: string) {
         .eq("id", editingJobId);
 
       if (updateError) {
-        toast({ title: t("error.update_failed"), variant: "destructive" });
+        toast({
+          title: t("error.update_failed"),
+          description: updateError.message,
+          variant: "destructive",
+        });
         return null;
       }
 
