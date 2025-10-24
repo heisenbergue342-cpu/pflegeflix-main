@@ -21,6 +21,7 @@ export function useJobPosting(draftId?: string) {
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
   const [loadingDraftOrJob, setLoadingDraftOrJob] = useState<boolean>(!!draftId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState<any>({
     title: "",
@@ -140,6 +141,7 @@ export function useJobPosting(draftId?: string) {
 
       if (draft) {
         setFormData(draft);
+        setCurrentStep(draft.step || 1);
         setLoadingDraftOrJob(false);
         return;
       }
@@ -174,6 +176,7 @@ export function useJobPosting(draftId?: string) {
           contact_person: "",
           acceptedTerms: true,
         });
+        setCurrentStep(1);
         trackAnalyticsEvent("job_edit_opened", { jobId: job.id });
         setLoadingDraftOrJob(false);
         return;
@@ -200,6 +203,7 @@ export function useJobPosting(draftId?: string) {
     const draftData = {
       ...formData,
       user_id: user.id,
+      step: currentStep,
       updated_at: new Date().toISOString(),
     };
 
@@ -394,6 +398,8 @@ export function useJobPosting(draftId?: string) {
 
   return {
     formData,
+    currentStep,
+    setCurrentStep,
     updateFormData,
     saveDraft,
     publishJob,
