@@ -25,16 +25,6 @@ const SPECIALTY_TAGS = [
 export function StepDetails({ formData, updateFormData }: StepDetailsProps) {
   const { t } = useLanguage();
 
-  // Safety check
-  if (!formData) {
-    return (
-      <div className="text-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">Lade Formulardaten...</p>
-      </div>
-    );
-  }
-
   const addRequirement = () => {
     const requirements = formData.requirements || [];
     updateFormData({ requirements: [...requirements, ""] });
@@ -83,7 +73,7 @@ export function StepDetails({ formData, updateFormData }: StepDetailsProps) {
           <Label htmlFor="description">{t("job.field.description")} *</Label>
           <Textarea
             id="description"
-            value={formData.description || ""}
+            value={formData.description}
             onChange={(e) => updateFormData({ description: e.target.value })}
             placeholder={t("job.field.description_placeholder")}
             className="mt-1 min-h-[200px]"

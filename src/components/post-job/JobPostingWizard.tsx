@@ -38,18 +38,6 @@ export function JobPostingWizard({
 }: JobPostingWizardProps) {
   const { t } = useLanguage();
 
-  // Safety check - if formData is not loaded yet
-  if (!formData) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Lade Formulardaten...</p>
-        </div>
-      </div>
-    );
-  }
-
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -120,7 +108,7 @@ export function JobPostingWizard({
               <ChevronRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={onPublish} disabled={!formData?.acceptedTerms}>
+            <Button onClick={onPublish} disabled={!formData.acceptedTerms}>
               <Eye className="w-4 h-4 mr-2" />
               {t("job.post.publish") || "Publish Job"}
             </Button>

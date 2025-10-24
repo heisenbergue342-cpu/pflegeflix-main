@@ -16,16 +16,6 @@ interface StepPreviewProps {
 export function StepPreview({ formData, updateFormData, onPublish }: StepPreviewProps) {
   const { t } = useLanguage();
 
-  // Safety check
-  if (!formData) {
-    return (
-      <div className="text-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-muted-foreground">Lade Formulardaten...</p>
-      </div>
-    );
-  }
-
   useEffect(() => {
     // Sync local checkbox state with formData
     if (!formData.acceptedTerms) {
@@ -41,10 +31,10 @@ export function StepPreview({ formData, updateFormData, onPublish }: StepPreview
       <Card className="p-6 border-2">
         <div className="space-y-4">
           <div>
-            <h3 className="text-2xl font-bold mb-2">{formData.title || "Untitled"}</h3>
+            <h3 className="text-2xl font-bold mb-2">{formData.title}</h3>
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="w-4 h-4" />
-              <span>{formData.city || "—"}, {formData.state || "—"}</span>
+              <span>{formData.city}, {formData.state}</span>
             </div>
           </div>
 
@@ -86,7 +76,7 @@ export function StepPreview({ formData, updateFormData, onPublish }: StepPreview
 
           <div>
             <h4 className="font-semibold mb-2">{t("job.field.description")}</h4>
-            <p className="text-sm whitespace-pre-wrap">{formData.description || "—"}</p>
+            <p className="text-sm whitespace-pre-wrap">{formData.description}</p>
           </div>
 
           {formData.requirements && formData.requirements.length > 0 && (
@@ -107,7 +97,7 @@ export function StepPreview({ formData, updateFormData, onPublish }: StepPreview
         <div className="flex items-start space-x-3">
           <Checkbox
             id="terms"
-            checked={formData.acceptedTerms || false}
+            checked={formData.acceptedTerms}
             onCheckedChange={(checked) => updateFormData({ acceptedTerms: checked as boolean })}
           />
           <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
