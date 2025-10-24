@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const BUCKET = getJobPhotosBucket();
+const SIGNED_URL_SECONDS = Number((import.meta as any)?.env?.VITE_SUPABASE_SIGNED_URL_SECONDS || 604800);
 
 type MetaItem = {
   url: string;
@@ -43,9 +44,13 @@ export default function JobPhotoGallery({ jobId }: { jobId: string }) {
         }
       }
       const { data } = await supabase.storage.from(BUCKET).list(folder, { limit: 10 });
-      const urls = (data || [])
-        .filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json")
-        .map((f) => ({ url: supabase.storage.from(BUCKET).getPublicUrl(`${folder}/${f.name}`).data.publicUrl }));
+      const items = (data || []).filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json");
+      const urls: MetaItem[] = [];
+      for (const f of items) {
+        const path = `${folder}/${f.name}`;
+        const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
+        urls.push({ url: signed?.signedUrl || "", alt: t("common.gallery_image_alt") });
+      }
       setPhotos(urls);
       setIndex(0);
     };

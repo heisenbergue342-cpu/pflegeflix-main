@@ -219,8 +219,8 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const path = `${basePath}/${fileName}`;
       setProgress(Math.round(((i + 0.5) / filesArr.length) * 100));
-      // BUCKET im Upload verwenden (ggf. gerade via Override gesetzt)
-      const uploadRes = await supabase.storage.from(BUCKET).upload(`${basePath}/${fileName}`, file, {
+      // Upload the converted WebP blob (or original when conversion failed)
+      const uploadRes = await supabase.storage.from(BUCKET).upload(`${basePath}/${fileName}`, processedBlob, {
         cacheControl: "3600",
         upsert: false,
       });
@@ -229,7 +229,7 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
         continue;
       }
       // Step 3: public or signed URL + dimensions
-      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(`${basePath}/${fileName}`, 60 * 60 * 24 * 7);
+      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET).createSignedUrl(`${basePath}/${fileName}`, SIGNED_URL_SECONDS);
       const publicUrl = !signedError && signed?.signedUrl
         ? signed.signedUrl
         : supabase.storage.from(BUCKET).getPublicUrl(`${basePath}/${fileName}`).data.publicUrl;

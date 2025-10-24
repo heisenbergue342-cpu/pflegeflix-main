@@ -137,6 +137,32 @@ Effects:
 - Shows progress, thumbnails, counter (e.g., 2/5), and actions to delete/reorder.
 - Images persist in Supabase Storage (public URLs) and appear in the job detail gallery.
 
+## Photo Upload Setup (Supabase Storage)
+
+- Bucket: `job-photos` (private recommended)
+- Policies (created via migrations):
+  - Select: public (anyone) for bucket `job-photos` to allow listing and creating signed URLs
+  - Insert/Update/Delete: only employers/admin (based on `public.user_roles`)
+- Env variables:
+  - `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (client)
+  - `VITE_SUPABASE_BUCKET_JOB_PHOTOS=job-photos`
+  - `VITE_SUPABASE_SIGNED_URL_SECONDS=604800`
+- Vercel: add the same variables under Project Settings → Environment Variables.
+
+### Verification Checklist
+1. Bucket exists: `job-photos` in Supabase Dashboard → Storage.
+2. Migrations applied: policies visible under `storage.objects` for `job-photos`.
+3. Env keys loaded:
+   - Local: `.env` (use `.env.example` as template)
+   - Vercel: Environment Variables set
+4. Upload works:
+   - Employer can upload up to 5 images (JPG/PNG/WebP ≤ 5 MB), drag-and-drop, progress shown.
+   - Delete and re-order work.
+5. Visibility:
+   - Job details gallery shows images (lazy-loaded), using signed URLs for private bucket.
+6. Error messages:
+   - Type/size/network errors shown with i18n (DE/EN).
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

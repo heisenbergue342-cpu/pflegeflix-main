@@ -15,6 +15,7 @@ import { StepApplication } from "@/components/post-job/StepApplication";
 import { StepPreview } from "@/components/post-job/StepPreview";
 import SEO from "@/components/SEO";
 import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { getJobPhotosBucket } from "@/utils/storage";
 import { PAYWALL_DISABLED, FREE_MODE_MAX_ACTIVE_JOBS } from '@/utils/featureFlags';
 import UpgradePromptModal from "@/components/employer/UpgradePromptModal";
 
@@ -469,7 +470,7 @@ export default function PostJob() {
 
     // Move photos/metadata from drafts/{draftId} to jobs/{newJob.id}
     if (draftId && newJob?.id) {
-      const BUCKET = "job-photos";
+      const BUCKET = getJobPhotosBucket();
       const fromFolder = `drafts/${draftId}`;
       const toFolder = `jobs/${newJob.id}`;
       const { data: files } = await supabase.storage.from(BUCKET).list(fromFolder, { limit: 50 });
