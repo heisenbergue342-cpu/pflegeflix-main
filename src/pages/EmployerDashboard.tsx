@@ -25,6 +25,7 @@ import ApplicationsDrawer from "@/components/employer/ApplicationsDrawer";
 import SEO from "@/components/SEO";
 import UpgradePromptModal from "@/components/employer/UpgradePromptModal";
 import { trackAnalyticsEvent } from "@/hooks/useAnalytics";
+import { JOB_PHOTOS_BUCKET } from "@/utils/storage";
 
 type ViewMode = "table" | "grid";
 type SortBy = "newest" | "applications" | "views";
@@ -239,7 +240,7 @@ export default function EmployerDashboard() {
       if (error) throw error;
 
       // Remove photos from storage
-      const BUCKET = "job-photos";
+      const BUCKET = JOB_PHOTOS_BUCKET;
       const folder = `jobs/${jobToDelete}`;
       const { data: files } = await supabase.storage.from(BUCKET).list(folder, { limit: 100 });
       if (files && files.length) {

@@ -160,10 +160,9 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     return true;
   };
 
-  // Check bucket/path availability before uploading to show actionable errors
   const preflightStorage = async (): Promise<string | null> => {
     const { error } = await supabase.storage.from(BUCKET).list(basePath, { limit: 1 });
-    if (error) return error.message;
+    if (error) return error.message || "unknown error";
     return null;
   };
 
@@ -171,7 +170,15 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     if (!files || files.length === 0) return;
     const preflightError = await preflightStorage();
     if (preflightError) {
-      toast.error(`${t("common.upload_error_network")} (${preflightError})`);
+      const lower = preflightError.toLowerCase();
+      if (lower.includes("bucket") && lower.includes("not found")) {
+        // Give a precise, actionable hint including the expected bucket name
+        toast.error(
+          `Bucket "${BUCKET}" nicht gefunden. Bitte in Supabase Storage einen Bucket mit genau diesem Namen anlegen ODER in deiner .env den korrekten Namen setzen (VITE_SUPABASE_BUCKET_JOB_PHOTOS).`
+        );
+      } else {
+        toast.error(`${t("common.upload_error_network")} (${preflightError})`);
+      }
       return;
     }
     const currentCount = photos.length;
