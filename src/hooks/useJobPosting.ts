@@ -150,7 +150,11 @@ export function useJobPosting(draftId?: string) {
           navigate(`/employer/post/${newDraft.id}`, { replace: true });
           return;
         } else {
-          toast.error("Fehler beim Erstellen des Entwurfs. Bitte versuche es erneut.");
+          toast({
+            title: "Fehler beim Erstellen des Entwurfs",
+            description: "Bitte versuche es erneut.",
+            variant: "destructive",
+          });
           setLoadingDraftOrJob(false);
           return;
         }
