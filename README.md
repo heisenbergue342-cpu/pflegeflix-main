@@ -163,6 +163,29 @@ Effects:
 6. Error messages:
    - Type/size/network errors shown with i18n (DE/EN).
 
+## Photo uploads (Supabase)
+
+Checklist:
+1. Storage bucket exists in the same Supabase project as your app:
+   - Name: `job-photos`, private.
+2. Env variables in all environments (Dev/Preview/Prod):
+   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_BUCKET_JOB_PHOTOS=job-photos`
+   - Optional: `VITE_SUPABASE_SIGNED_URL_SECONDS=604800`
+3. RLS policies:
+   - `SELECT` on `storage.objects` → `TO authenticated` for `bucket_id='job-photos'`
+   - `INSERT/UPDATE/DELETE` → `TO authenticated` restricted to roles `arbeitgeber/admin` and paths `drafts/*` or `jobs/*`
+4. Uploader UX:
+   - 1–5 images, JPG/PNG/WebP, ≤ 5 MB each; progress; reorder; delete; localized errors (DE/EN).
+5. Gallery:
+   - Guests see images via signed URLs returned by the `list-job-photos` Edge Function (no public read required).
+6. Local override:
+   - Clear `localStorage['pflegeflix.jobPhotosBucket.override']` if previously set.
+
+Common errors:
+- "Bucket not found": Bucket name differs or exists in a different Supabase project than the keys used.
+- "permission denied": RLS policies missing for `authenticated` roles; or path not matching `drafts/*` / `jobs/*`.
+- "invalid key / unauthorized": Check `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in your env.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

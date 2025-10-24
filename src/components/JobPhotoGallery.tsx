@@ -26,36 +26,22 @@ export default function JobPhotoGallery({ jobId }: { jobId: string }) {
   const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
-    const list = async () => {
-      const folder = `jobs/${jobId}`;
-      // Try metadata.json first
-      const { data: metaBlob } = await supabase.storage.from(BUCKET).download(`${folder}/metadata.json`);
-      if (metaBlob) {
-        try {
-          const text = await metaBlob.text();
-          const parsed = JSON.parse(text) as MetaItem[];
-          // Ensure cover is first
-          const ordered = [...parsed].sort((a, b) => (b.isCover ? 1 : 0) - (a.isCover ? 1 : 0));
-          setPhotos(ordered);
-          setIndex(0);
-          return;
-        } catch {
-          // fallback to folder listing
-        }
+    const fetchSigned = async () => {
+      const { data, error } = await supabase.functions.invoke("list-job-photos", {
+        body: { jobId, ttlSeconds: SIGNED_URL_SECONDS },
+      });
+      if (error) {
+        console.error("list-job-photos invoke error:", error);
+        return;
       }
-      const { data } = await supabase.storage.from(BUCKET).list(folder, { limit: 10 });
-      const items = (data || []).filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json");
-      const urls: MetaItem[] = [];
-      for (const f of items) {
-        const path = `${folder}/${f.name}`;
-        const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
-        urls.push({ url: signed?.signedUrl || "", alt: t("common.gallery_image_alt") });
+      const items = (data?.photos || []) as { url: string }[];
+      if (items.length > 0) {
+        setPhotos(items.map((it: any) => ({ url: it.url, alt: t("common.gallery_image_alt") })));
+        setIndex(0);
       }
-      setPhotos(urls);
-      setIndex(0);
     };
-    if (jobId) list();
-  }, [jobId]);
+    if (jobId) fetchSigned();
+  }, [jobId, t]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
