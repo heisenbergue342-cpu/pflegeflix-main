@@ -1,0 +1,1 @@
+export const JOB_PHOTOS_BUCKET = import.meta.env.VITE_SUPABASE_BUCKET_JOB_PHOTOS || "job-photos";

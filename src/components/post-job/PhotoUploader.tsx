@@ -10,6 +10,7 @@ import { X, UploadCloud, ArrowUpCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { JOB_PHOTOS_BUCKET } from "@/utils/storage";
 
 type UploadedPhoto = {
   name: string;
@@ -26,7 +27,7 @@ interface PhotoUploaderProps {
   idOverride?: string;
 }
 
-const BUCKET = import.meta.env.VITE_SUPABASE_BUCKET_JOB_PHOTOS || "job-photos";
+const BUCKET = JOB_PHOTOS_BUCKET;
 const SIGNED_URL_SECONDS = Number(import.meta.env.VITE_SUPABASE_SIGNED_URL_SECONDS || 604800); // 7 Tage
 const ACCEPTED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_FILES = 5;

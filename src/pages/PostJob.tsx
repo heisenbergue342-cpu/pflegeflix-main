@@ -124,7 +124,27 @@ export default function PostJob() {
   // Load draft or existing job (edit mode)
   useEffect(() => {
     const loadDraftOrJob = async () => {
+      // If there's no draftId, auto-create a draft so uploads go to drafts/{id}
       if (!draftId) {
+        if (!user) {
+          setLoadingDraftOrJob(false);
+          return;
+        }
+        const { data: newDraft, error: createError } = await supabase
+          .from("draft_jobs")
+          .insert({
+            user_id: user.id,
+            step: 1,
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+        if (!createError && newDraft?.id) {
+          // Navigate to the new draft route; subsequent effect will load it
+          navigate(`/employer/post/${newDraft.id}`, { replace: true });
+          return;
+        }
+        // Fallback: if creation failed, continue without blocking the UI
         setLoadingDraftOrJob(false);
         return;
       }
@@ -189,7 +209,7 @@ export default function PostJob() {
     };
 
     loadDraftOrJob();
-  }, [draftId, t]);
+  }, [draftId, t, user, navigate]);
 
   // Autosave every 30 seconds
   useEffect(() => {
