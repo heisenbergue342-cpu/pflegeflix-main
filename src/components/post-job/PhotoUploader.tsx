@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { getJobPhotosBucket, setJobPhotosBucketOverride } from "@/utils/storage";
+import StorageSetupGuide from "@/components/StorageSetupGuide";
 
 type UploadedPhoto = {
   name: string;
@@ -41,6 +42,8 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
   const [dragActive, setDragActive] = useState(false);
   const [progress, setProgress] = useState<number>(0);
   const dragSrcIndex = useRef<number | null>(null);
+  const [showSetupGuide, setShowSetupGuide] = useState(false);
+  const [bucketError, setBucketError] = useState<string | null>(null);
 
   const basePath = useMemo(() => {
     if (mode === 'job' && idOverride) return `jobs/${idOverride}`;
@@ -85,7 +88,18 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
       setPhotos(meta);
       return;
     }
-    const { data } = await supabase.storage.from(BUCKET).list(basePath, { limit: 20 });
+    const { data, error } = await supabase.storage.from(BUCKET).list(basePath, { limit: 20 });
+    if (error) {
+      console.error("Fehler beim Laden der Fotos:", error);
+      const msg = error.message.toLowerCase();
+      if (msg.includes("bucket") && (msg.includes("not found") || msg.includes("does not exist"))) {
+        setBucketError(error.message);
+        setShowSetupGuide(true);
+      } else if (!msg.includes("not found")) {
+        toast.error(`Fehler beim Laden der Fotos: ${error.message}`);
+      }
+      return;
+    }
     const files = (data || []).filter((f) => !f.name.startsWith(".") && f.name !== "metadata.json");
     const mapped: UploadedPhoto[] = [];
     for (let idx = 0; idx < files.length; idx++) {
@@ -105,6 +119,21 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     listExisting();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basePath]);
+
+  // Check bucket on mount
+  useEffect(() => {
+    const checkBucket = async () => {
+      const { error } = await supabase.storage.from(BUCKET).list("", { limit: 1 });
+      if (error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("bucket") && (msg.includes("not found") || msg.includes("does not exist"))) {
+          setBucketError(error.message);
+          setShowSetupGuide(true);
+        }
+      }
+    };
+    checkBucket();
+  }, []);
 
   const getImageDimensionsFromBlob = (blob: Blob): Promise<{ width: number; height: number }> =>
     new Promise((resolve) => {
@@ -173,26 +202,9 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     if (preflightError) {
       const lower = preflightError.toLowerCase();
       if (lower.includes("bucket") && lower.includes("not found")) {
-        // Interaktive Eingabe des korrekten Bucket-Namens mit sofortigem Retry
-        const suggested = BUCKET || "job-photos";
-        const input = window.prompt(
-          `Bucket "${suggested}" nicht gefunden.\nBitte gib den korrekten Bucket-Namen aus deinem Supabase Storage ein:`,
-          suggested
-        );
-        if (input && input.trim().length > 0) {
-          BUCKET = setJobPhotosBucketOverride(input.trim());
-          toast.success(`Bucket gesetzt: "${BUCKET}". Upload wird erneut versucht…`);
-          // Retry Preflight & Upload
-          const retryPreflight = await preflightStorage();
-          if (retryPreflight) {
-            toast.error(`Preflight fehlgeschlagen: ${retryPreflight}`);
-            return;
-          }
-          // Fällt unten in den Upload-Durchlauf
-        } else {
-          toast.error(`Upload abgebrochen: kein gültiger Bucket-Name angegeben.`);
-          return;
-        }
+        setBucketError(preflightError);
+        setShowSetupGuide(true);
+        return;
       } else {
         toast.error(`${t("common.upload_error_network")} (${preflightError})`);
         return;
@@ -306,6 +318,16 @@ export default function PhotoUploader({ mode = 'draft', idOverride }: PhotoUploa
     const files = e.dataTransfer.files;
     await handleFiles(files);
   };
+
+  const retryAfterSetup = () => {
+    setShowSetupGuide(false);
+    setBucketError(null);
+    listExisting();
+  };
+
+  if (showSetupGuide) {
+    return <StorageSetupGuide bucketName={BUCKET} onRetry={retryAfterSetup} />;
+  }
 
   return (
     <div className="space-y-3">

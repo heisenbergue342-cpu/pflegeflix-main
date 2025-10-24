@@ -130,6 +130,8 @@ export default function PostJob() {
           setLoadingDraftOrJob(false);
           return;
         }
+        // Zeige Loading während Draft erstellt wird
+        setLoadingDraftOrJob(true);
         const { data: newDraft, error: createError } = await supabase
           .from("draft_jobs")
           .insert({
@@ -143,10 +145,11 @@ export default function PostJob() {
           // Navigate to the new draft route; subsequent effect will load it
           navigate(`/employer/post/${newDraft.id}`, { replace: true });
           return;
+        } else {
+          toast.error("Fehler beim Erstellen des Entwurfs. Bitte versuche es erneut.");
+          setLoadingDraftOrJob(false);
+          return;
         }
-        // Fallback: if creation failed, continue without blocking the UI
-        setLoadingDraftOrJob(false);
-        return;
       }
 
       // Try loading as draft first
