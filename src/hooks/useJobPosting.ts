@@ -52,13 +52,17 @@ export function useJobPosting(draftId?: string) {
   useEffect(() => {
     const checkRoleAndSubscription = async () => {
       if (!user) {
+        console.log("No user found, redirecting to auth");
         navigate("/auth");
         return;
       }
 
+      console.log("Checking role and subscription for user:", user.id);
+
       // Diagnose: Missing Supabase env configuration
       const SUPABASE_CONFIG_OK = !!ENV_URL && !!ENV_KEY;
       if (!SUPABASE_CONFIG_OK) {
+        console.error("Supabase not configured:", { ENV_URL, ENV_KEY });
         toast({
           title: "Supabase nicht konfiguriert",
           description: "Bitte setze VITE_SUPABASE_URL und VITE_SUPABASE_PUBLISHABLE_KEY in deiner .env-Datei.",
@@ -70,6 +74,7 @@ export function useJobPosting(draftId?: string) {
       }
 
       if (PAYWALL_DISABLED) {
+        console.log("Paywall disabled, allowing post");
         setCanPost(true);
         setSubscriptionInfo({
           plan: {
@@ -88,6 +93,8 @@ export function useJobPosting(draftId?: string) {
           .in("role", ["arbeitgeber", "admin"])
           .maybeSingle();
 
+        console.log("Role data from user_roles:", roleData);
+
         // Fallback: wenn kein Eintrag in user_roles, prüfe Profile-Rolle
         if (!roleData) {
           const { data: profileRole } = await supabase
@@ -95,7 +102,9 @@ export function useJobPosting(draftId?: string) {
             .select("role")
             .eq("id", user.id)
             .maybeSingle();
+          console.log("Profile role:", profileRole);
           if (!profileRole || (profileRole.role !== "arbeitgeber" && profileRole.role !== "admin")) {
+            console.log("User is not arbeitgeber or admin, redirecting");
             navigate("/");
             return;
           }
@@ -107,9 +116,11 @@ export function useJobPosting(draftId?: string) {
           .eq("employer_id", user.id)
           .maybeSingle();
 
+        console.log("Subscription data:", subData);
         setSubscriptionInfo(subData || null);
 
         if (subData?.plan?.name === "Free") {
+          console.log("Free plan, allowing post");
           setCanPost(true);
           return;
         }
@@ -118,8 +129,10 @@ export function useJobPosting(draftId?: string) {
           employer_id: user.id,
         });
 
+        console.log("Can post data:", canPostData);
         setCanPost(canPostData === true);
       } catch (_e) {
+        console.error("Error checking role and subscription:", _e);
         setCanPost(true);
       }
     };

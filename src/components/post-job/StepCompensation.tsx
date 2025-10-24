@@ -12,6 +12,16 @@ interface StepCompensationProps {
 export function StepCompensation({ formData, updateFormData }: StepCompensationProps) {
   const { t } = useLanguage();
 
+  // Safety check
+  if (!formData) {
+    return (
+      <div className="text-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <p className="text-muted-foreground">Lade Formulardaten...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold">{t("job.step3.title")}</h2>
@@ -86,7 +96,7 @@ export function StepCompensation({ formData, updateFormData }: StepCompensationP
           </div>
           <Switch
             id="featured"
-            checked={formData.featured}
+            checked={formData.featured || false}
             onCheckedChange={(checked) => updateFormData({ featured: checked })}
           />
         </div>

@@ -505,17 +505,31 @@ export default function PostJob() {
     }
   };
 
-  // Show permission error if user can't access
+  // Loading state
   if (canPost === null || loadingDraftOrJob) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Lade Daten...</p>
+        </div>
       </div>
     );
   }
 
-  // Show success screen
-  if (publishSuccess) {
+  // Check if formData is loaded
+  if (!formData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">Fehler beim Laden der Daten</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Success screen
+  if (publishSuccess && publishedJobId) {
     return (
       <div className="min-h-screen bg-background pt-20 pb-8">
         <div className="container max-w-4xl mx-auto px-4">

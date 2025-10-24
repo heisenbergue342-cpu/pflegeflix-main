@@ -15,6 +15,18 @@ interface StepBasicsProps {
 export function StepBasics({ formData, updateFormData, isEditing, editingJobId }: StepBasicsProps) {
   const { t } = useLanguage();
 
+  // Safety check - if formData is not loaded yet
+  if (!formData) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Lade Formulardaten...</p>
+        </div>
+      </div>
+    );
+  }
+
   const states = [
     "Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen",
     "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen",
@@ -47,7 +59,7 @@ export function StepBasics({ formData, updateFormData, isEditing, editingJobId }
           <Label htmlFor="title">{t("job.field.title")} *</Label>
           <Input
             id="title"
-            value={formData.title}
+            value={formData.title || ""}
             onChange={(e) => updateFormData({ title: e.target.value })}
             placeholder={t("job.field.title_placeholder")}
             className="mt-1"
