@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         setTimeout(() => {
-          fetchProfile(session.user);
+          fetchProfile(session.user.id);
         }, 0);
       } else {
         setProfile(null);
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user);
+        fetchProfile(session.user.id);
       }
       setLoading(false);
     });
@@ -46,21 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userObj: User) => {
+  const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userObj.id)
-      .maybeSingle();
-    // Fallback: wenn keine Rolle im Profil vorhanden ist, nutze user_metadata.role
-    const metaRole = (userObj.user_metadata as Record<string, any> | undefined)?.role ?? null;
-    const finalRole = (data as any)?.role ?? metaRole ?? null;
-    if (data) {
-      setProfile({ ...data, role: finalRole });
-    } else {
-      // Kein Profil-Eintrag vorhanden: minimalen Profil-State setzen mit fallback Rolle
-      setProfile({ id: userObj.id, role: finalRole });
-    }
+      .eq('id', userId)
+      .single();
+    setProfile(data);
   };
 
   const signIn = async (email: string, password: string) => {
