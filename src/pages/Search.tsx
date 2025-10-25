@@ -449,7 +449,7 @@ export default function Search() {
           aria-label={t('search.results_region_label')}
         >
           {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
+            <JobCard key={job.id} job={job} filters={filters} />
           ))}
         </div>
 

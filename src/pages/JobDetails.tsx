@@ -11,7 +11,7 @@ import { Heart, MapPin, Briefcase, Clock, Euro } from 'lucide-react';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import { JobPostingStructuredData, BreadcrumbStructuredData, OrganizationStructuredData } from '@/components/StructuredData';
-import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import JobPhotoGallery from '@/components/JobPhotoGallery';
 
 export default function JobDetails() {
@@ -19,12 +19,14 @@ export default function JobDetails() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { trackDetailView, trackApplyOpen, trackApplySubmit } = useAnalytics();
   const [job, setJob] = useState<any>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
   const [applying, setApplying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [applyOpenTracked, setApplyOpenTracked] = useState(false);
 
   useEffect(() => {
     // Scroll to top on navigation to a new job
@@ -39,6 +41,13 @@ export default function JobDetails() {
       }
     }
   }, [id, user]);
+
+  // Track detail view (delayed)
+  useEffect(() => {
+    if (job?.id && job?.employer_id) {
+      trackDetailView(job.id, job.employer_id);
+    }
+  }, [job?.id, job?.employer_id, trackDetailView]);
 
   const fetchJob = async () => {
     setLoading(true);
@@ -61,11 +70,6 @@ export default function JobDetails() {
     
     setJob(data);
     setLoading(false);
-    const category =
-      data.facility_type === 'Altenheim' ? 'Altenheime' :
-      data.facility_type === '1zu1' ? '1:1 Intensivpflege' :
-      'Kliniken';
-    trackAnalyticsEvent('job_viewed', { jobId: data.id, city: data.city, state: data.state, category });
   };
 
   const checkIfSaved = async () => {
@@ -103,14 +107,20 @@ export default function JobDetails() {
     }
   };
 
+  const handleApplyOpen = () => {
+    if (!applyOpenTracked && job?.id && job?.employer_id) {
+      trackApplyOpen(job.id, job.employer_id);
+      setApplyOpenTracked(true);
+    }
+  };
+
   const handleApply = async () => {
     if (!user) {
       toast.error(t('auth.login_required.message'));
       navigate('/auth');
       return;
     }
-    // Track apply click
-    trackAnalyticsEvent('apply_click', { jobId: id });
+    
     setApplying(true);
     const { error } = await supabase
       .from('applications')
@@ -125,14 +135,13 @@ export default function JobDetails() {
     } else {
       toast.success(t('application.success'));
       setCoverLetter('');
+      
+      // Track successful application
+      if (job?.id && job?.employer_id) {
+        trackApplySubmit(job.id, job.employer_id);
+      }
+      
       navigate('/applications');
-    }
-    if (!error) {
-      const category =
-        job.facility_type === 'Altenheim' ? 'Altenheime' :
-        job.facility_type === '1zu1' ? '1:1 Intensivpflege' :
-        'Kliniken';
-      trackAnalyticsEvent('application_submitted', { jobId: id, category });
     }
     setApplying(false);
   };
@@ -301,6 +310,7 @@ export default function JobDetails() {
                 placeholder={t('application.cover_letter')}
                 value={coverLetter}
                 onChange={(e) => setCoverLetter(e.target.value)}
+                onFocus={handleApplyOpen}
                 className="bg-netflix-bg border-netflix-card text-white min-h-[120px]"
                 aria-label={t('application.cover_letter')}
               />

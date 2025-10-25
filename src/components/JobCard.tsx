@@ -5,23 +5,26 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import LoginPromptModal from '@/components/LoginPromptModal';
-import { analyticsJob } from '@/lib/analytics-events';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 interface JobCardProps {
   job: any;
   onSaveChange?: () => void;
   priority?: boolean;
+  filters?: Record<string, any>;
 }
 
-export default function JobCard({ job, onSaveChange, priority = false }: JobCardProps) {
+export default function JobCard({ job, onSaveChange, priority = false, filters }: JobCardProps) {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { observeJobCard, trackListClick } = useAnalytics();
   const [isSaved, setIsSaved] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  
   const BOOST_WINDOW_HOURS = 48;
   const isBoosted = useMemo(() => {
     if (!job?.boosted_at) return false;
@@ -35,6 +38,13 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
       checkIfSaved();
     }
   }, [user, job.id]);
+
+  // Track impression
+  useEffect(() => {
+    if (cardRef.current && job.id && job.employer_id) {
+      return observeJobCard(cardRef.current, job.id, job.employer_id, filters);
+    }
+  }, [job.id, job.employer_id, filters, observeJobCard]);
 
   const checkIfSaved = async () => {
     if (!user) return;
@@ -63,7 +73,6 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
         .eq('job_id', job.id);
       setIsSaved(false);
       toast.success(t('favorites.removed'));
-      analyticsJob.unsaved(job.id);
       onSaveChange?.();
     } else {
       await supabase
@@ -71,17 +80,23 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
         .insert({ user_id: user.id, job_id: job.id });
       setIsSaved(true);
       toast.success(t('favorites.saved'));
-      analyticsJob.saved(job.id);
       onSaveChange?.();
+    }
+  };
+
+  const handleClick = () => {
+    if (job.id && job.employer_id) {
+      trackListClick(job.id, job.employer_id, filters);
     }
   };
 
   const daysAgo = Math.floor((new Date().getTime() - new Date(job.posted_at).getTime()) / (1000 * 60 * 60 * 24));
 
   return (
-    <div className="bg-netflix-card rounded-lg shadow-sm p-4">
+    <div ref={cardRef} className="bg-netflix-card rounded-lg shadow-sm p-4">
       <Link
         to={`/jobs/${job.id}`}
+        onClick={handleClick}
         className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-netflix-red rounded-md cursor-pointer"
         aria-label={job.title}
       >
