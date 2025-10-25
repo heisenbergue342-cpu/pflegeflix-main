@@ -19,9 +19,9 @@ export default function Applications() {
         noindex={true}
       />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
+      <div className="container mx-auto px-4 py-8 overflow-visible">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+          <div className="min-w-0">
             <h1 className="text-3xl font-bold text-white mb-2">{t('nav.applications')}</h1>
             <p className="text-netflix-text-muted">
               {t('applications.subtitle')}
@@ -30,7 +30,7 @@ export default function Applications() {
           <Button
             variant="outline"
             onClick={() => navigate('/privacy-settings')}
-            className="gap-2"
+            className="gap-2 ms-auto z-10"
             aria-label={t('privacy_settings.title')}
           >
             <Shield className="h-4 w-4" aria-hidden="true" />

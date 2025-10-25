@@ -304,22 +304,22 @@ export function ApplicationInbox() {
   return (
     <div className="grid md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
       {/* Applications List */}
-      <Card className="bg-card border-border overflow-hidden">
+      <Card className="bg-card border-border overflow-visible">
         <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-semibold text-foreground flex items-center gap-2 min-w-0">
               <Mail className="h-5 w-5" />
               {t('application.inbox_title')}
             </h3>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ms-auto z-10 min-w-0">
               <Tabs value={filterTab} onValueChange={(v: any) => setFilterTab(v)}>
                 <TabsList className="bg-muted">
-                  <TabsTrigger value="all">{t('applicants.all') || 'Alle'}</TabsTrigger>
-                  <TabsTrigger value="unread">{t('messages.unread') || 'Ungelesen'}</TabsTrigger>
+                  <TabsTrigger value="all" aria-label={t('applicants.all') || 'Alle'}>{t('applicants.all') || 'Alle'}</TabsTrigger>
+                  <TabsTrigger value="unread" aria-label={t('messages.unread') || 'Ungelesen'}>{t('messages.unread') || 'Ungelesen'}</TabsTrigger>
                 </TabsList>
               </Tabs>
               <Select value={jobFilter} onValueChange={(v) => setJobFilter(v)}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-[160px]" aria-label={t('applicants.filter_job') || 'Stelle filtern'}>
                   <SelectValue placeholder={t('applicants.filter_job')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -345,7 +345,7 @@ export function ApplicationInbox() {
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <h4 className={`text-foreground text-sm line-clamp-1 ${app.unread_count > 0 ? 'font-bold' : 'font-medium'}`}>
                         {app.jobs.title}
@@ -365,7 +365,7 @@ export function ApplicationInbox() {
                     )}
                   </div>
                   {app.unread_count > 0 && (
-                    <Badge className="bg-netflix-red text-white text-xs">
+                    <Badge className="bg-netflix-red text-white text-xs" aria-label={`${app.unread_count} ${t('messages.unread') || 'Ungelesen'}`}>
                       {app.unread_count}
                     </Badge>
                   )}
@@ -380,13 +380,13 @@ export function ApplicationInbox() {
       </Card>
 
       {/* Messages */}
-      <Card className="md:col-span-2 bg-card border-border overflow-hidden flex flex-col">
+      <Card className="md:col-span-2 bg-card border-border overflow-visible flex flex-col">
         {selectedApp ? (
           <>
             <div className="p-4 border-b border-border">
               <div className="flex items-center gap-2">
                 <Briefcase className="h-5 w-5 text-muted-foreground" />
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-semibold text-foreground">{selectedApp.jobs.title}</h3>
                   <p className="text-sm text-muted-foreground">
                     {selectedApp.jobs.city}, {selectedApp.jobs.state}
