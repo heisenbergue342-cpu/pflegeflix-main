@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import CityComboboxMulti from "./CityComboboxMulti";
 import StateCombobox from "./StateCombobox";
 import PhotoUploader from "./PhotoUploader";
+import { CATEGORIES, facilityTypeForSlug, labelForCategory, CategorySlug, CATEGORY_BY_SLUG } from "@/constants/categories";
 
 interface StepBasicsProps {
   formData: any;
@@ -13,7 +14,7 @@ interface StepBasicsProps {
 }
 
 export function StepBasics({ formData, updateFormData, isEditing, editingJobId }: StepBasicsProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const states = [
     "Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen",
@@ -58,30 +59,41 @@ export function StepBasics({ formData, updateFormData, isEditing, editingJobId }
           <Label htmlFor="facility_type">{t("job.field.category")} *</Label>
           <select
             className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            value={formData.facility_type || ""}
+            value={
+              // derive current selection slug from facility_type or tag
+              (() => {
+                const ft = formData.facility_type as string | null;
+                if (ft === "Klinik") return "kliniken";
+                if (ft === "Krankenhaus") return "krankenhaeuser";
+                if (ft === "Altenheim") return "altenheime";
+                if (ft === "1zu1") return "1-1-intensivpflege";
+                if (Array.isArray(formData.tags) && formData.tags.includes("Ambulante Pflege")) return "ambulante-pflege";
+                return "";
+              })()
+            }
             onChange={(e) => {
-              const value = e.target.value;
-              if (value === "Kliniken") {
-                updateFormData({ facility_type: "Klinik" });
-              } else if (value === "Krankenhäuser") {
-                updateFormData({ facility_type: "Krankenhaus" });
-              } else if (value === "Ambulante Pflege") {
+              const slug = e.target.value as CategorySlug;
+              const def = CATEGORY_BY_SLUG[slug];
+              if (!def) return;
+              if (def.kind === "facility") {
+                const ft = facilityTypeForSlug(slug);
+                updateFormData({ facility_type: ft, tags: formData.tags || [] });
+              } else {
+                // Amb. Pflege: Tag hinzufügen (ohne facility_type zu überschreiben)
                 const nextTags = Array.isArray(formData.tags) ? [...formData.tags] : [];
                 if (!nextTags.includes("Ambulante Pflege")) nextTags.push("Ambulante Pflege");
-                updateFormData({ facility_type: formData.facility_type || "Klinik", tags: nextTags });
-              } else {
-                updateFormData({ facility_type: value });
+                updateFormData({ tags: nextTags });
               }
             }}
           >
             <option value="" disabled>
               {t("job.field.category_placeholder")}
             </option>
-            <option value="Kliniken">{t("category.clinics")}</option>
-            <option value="Krankenhäuser">{t("category.hospitals")}</option>
-            <option value="Altenheim">{t("category.nursing_homes")}</option>
-            <option value="1zu1">{t("category.intensive_care")}</option>
-            <option value="Ambulante Pflege">{t("category.outpatient")}</option>
+            {CATEGORIES.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {labelForCategory(c.slug, language)}
+              </option>
+            ))}
           </select>
         </div>
 

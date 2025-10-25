@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,14 +26,16 @@ import SEO from "@/components/SEO";
 import UpgradePromptModal from "@/components/employer/UpgradePromptModal";
 import { trackAnalyticsEvent } from "@/hooks/useAnalytics";
 import { getJobPhotosBucket } from "@/utils/storage";
+import { CATEGORIES, matchesCategory, labelForCategory, CategorySlug } from "@/constants/categories";
 
 type ViewMode = "table" | "grid";
 type SortBy = "newest" | "applications" | "views";
 type StatusFilter = "all" | "draft" | "online" | "paused" | "closed" | "expired";
-type CategoryFilter = "all" | "Kliniken" | "Krankenhäuser" | "Altenheim" | "1:1 Intensivpflege" | "Ambulante Pflege";
+type CategoryFilter = "all" | CategorySlug;
 
 export default function EmployerDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { t, language, formatDate } = useLanguage();
   const [jobs, setJobs] = useState<any[]>([]);
@@ -60,9 +62,17 @@ export default function EmployerDashboard() {
       navigate("/auth");
       return;
     }
-
     checkRoleAndLoadJobs();
   }, [user]);
+
+  // URL-Param ?category= lesen (erstes gültiges übernehmen)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get("category");
+    if (cat && (["kliniken","krankenhaeuser","altenheime","1-1-intensivpflege","ambulante-pflege"] as string[]).includes(cat)) {
+      setCategoryFilter(cat as CategoryFilter);
+    }
+  }, [location.search]);
 
   const checkRoleAndLoadJobs = async () => {
     if (!user) return;
@@ -129,20 +139,9 @@ export default function EmployerDashboard() {
       });
     }
 
-    // Category filter
+    // Category filter via zentrale Matching-Logik
     if (categoryFilter !== "all") {
-      result = result.filter(job => {
-        if (categoryFilter === "Kliniken") {
-          return job.facility_type === "Klinik";
-        }
-        if (categoryFilter === "Krankenhäuser") {
-          return job.facility_type === "Krankenhaus";
-        }
-        if (categoryFilter === "Altenheim") return job.facility_type === "Altenheim";
-        if (categoryFilter === "1:1 Intensivpflege") return job.facility_type === "1zu1";
-        if (categoryFilter === "Ambulante Pflege") return Array.isArray(job.tags) && job.tags.includes("Ambulante Pflege");
-        return true;
-      });
+      result = result.filter(job => matchesCategory(job, categoryFilter as CategorySlug));
     }
 
     // Sort
@@ -588,17 +587,21 @@ export default function EmployerDashboard() {
               </SelectContent>
             </Select>
 
+            {/* Category filter via zentrale Kategorien inkl. sichtbarer Counts */}
             <Select value={categoryFilter} onValueChange={(value: CategoryFilter) => setCategoryFilter(value)}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue />
+              <SelectTrigger className="w-full lg:w-64">
+                <SelectValue placeholder={t("dashboard.filter.all_categories")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("dashboard.filter.all_categories")}</SelectItem>
-                <SelectItem value="Kliniken">{t('category.clinics')}</SelectItem>
-                <SelectItem value="Krankenhäuser">{t('category.hospitals')}</SelectItem>
-                <SelectItem value="Altenheim">{t('category.nursing_homes')}</SelectItem>
-                <SelectItem value="1:1 Intensivpflege">{t('category.intensive_care')}</SelectItem>
-                <SelectItem value="Ambulante Pflege">{t('category.outpatient')}</SelectItem>
+                {CATEGORIES.map((cat) => {
+                  const count = jobs.filter((j) => matchesCategory(j, cat.slug)).length;
+                  return (
+                    <SelectItem key={cat.slug} value={cat.slug}>
+                      {labelForCategory(cat.slug, language)} ({count})
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
 
