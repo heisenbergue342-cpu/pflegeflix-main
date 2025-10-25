@@ -18,7 +18,6 @@ function getOrCreateSessionId(): string {
     try {
       const { id, timestamp } = JSON.parse(stored);
       if (now - timestamp < SESSION_DURATION) {
-        // Update timestamp to extend session
         localStorage.setItem(SESSION_KEY, JSON.stringify({ id, timestamp: now }));
         return id;
       }
@@ -27,7 +26,6 @@ function getOrCreateSessionId(): string {
     }
   }
   
-  // Create new session
   const newId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   localStorage.setItem(SESSION_KEY, JSON.stringify({ id: newId, timestamp: now }));
   return newId;
@@ -53,7 +51,6 @@ function getUTMParams(): { utm_source?: string; utm_medium?: string; utm_campaig
   };
 }
 
-// Check if analytics consent is granted
 const hasAnalyticsConsent = (): boolean => {
   const consent = localStorage.getItem('pflegeflix-cookie-consent');
   if (!consent) return false;
@@ -66,7 +63,6 @@ const hasAnalyticsConsent = (): boolean => {
   }
 };
 
-// Debounce helper
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
   let timeout: NodeJS.Timeout | null = null;
   return ((...args: Parameters<T>) => {
@@ -75,33 +71,23 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
   }) as T;
 }
 
-// Funnel event types
 export type FunnelEventType = 'impression' | 'list_click' | 'detail_view' | 'apply_open' | 'apply_submit';
 
-// Event types for type safety (existing + funnel)
 export type AnalyticsEvent = 
-  // Funnel events
   | FunnelEventType
-  // Search & Discovery
   | 'search_performed'
   | 'filter_applied'
   | 'filter_removed'
   | 'search_cleared'
   | 'filter_change'
-  
-  // Job Interactions
   | 'job_viewed'
   | 'job_saved'
   | 'job_unsaved'
   | 'job_share'
-  
-  // Application Process
   | 'apply_click'
   | 'application_started'
   | 'application_submitted'
   | 'application_abandoned'
-  
-  // Employer Actions
   | 'job_post_started'
   | 'job_post_step_completed'
   | 'job_post_published'
@@ -110,15 +96,11 @@ export type AnalyticsEvent =
   | 'applicant_stage_changed'
   | 'message_sent'
   | 'job_refreshed'
-  
-  // User Account
   | 'signup_started'
   | 'signup_completed'
   | 'login_completed'
   | 'logout'
   | 'profile_updated'
-  
-  // Engagement
   | 'carousel_interaction'
   | 'navigation_menu_opened'
   | 'cookie_preferences_changed'
@@ -132,19 +114,14 @@ export interface AnalyticsEventProps {
   [key: string]: string | number | boolean | undefined;
 }
 
-/**
- * Privacy-first analytics hook with funnel tracking
- */
 export function useAnalytics() {
   const { user } = useAuth();
   const impressionObserverRef = useRef<IntersectionObserver | null>(null);
   const trackedImpressionsRef = useRef<Set<string>>(new Set());
 
-  // Initialize Plausible script
   useEffect(() => {
     if (!hasAnalyticsConsent()) return;
 
-    // Check if script already exists
     if (document.querySelector('script[data-domain="' + PLAUSIBLE_DOMAIN + '"]')) {
       return;
     }
@@ -153,14 +130,11 @@ export function useAnalytics() {
     script.defer = true;
     script.dataset.domain = PLAUSIBLE_DOMAIN;
     script.src = 'https://plausible.io/js/script.js';
-    
-    // Plausible respects Do Not Track
     script.dataset.respectDnt = 'true';
     
     document.head.appendChild(script);
 
     return () => {
-      // Cleanup on unmount if consent is revoked
       const existingScript = document.querySelector('script[data-domain="' + PLAUSIBLE_DOMAIN + '"]');
       if (existingScript) {
         document.head.removeChild(existingScript);
@@ -168,27 +142,21 @@ export function useAnalytics() {
     };
   }, []);
 
-  /**
-   * Track a custom event with optional properties (Plausible)
-   */
   const trackEvent = useCallback((
     eventName: AnalyticsEvent,
     props?: AnalyticsEventProps
   ) => {
-    // Only track if consent is granted
     if (!hasAnalyticsConsent()) {
       console.debug('Analytics event blocked (no consent):', eventName);
       return;
     }
 
-    // Check if Plausible is loaded
     if (typeof window === 'undefined' || !(window as any).plausible) {
       console.warn('Plausible not loaded yet');
       return;
     }
 
     try {
-      // Track event with Plausible
       (window as any).plausible(eventName, { props });
       console.debug('Analytics event tracked:', eventName, props);
     } catch (error) {
@@ -196,13 +164,10 @@ export function useAnalytics() {
     }
   }, []);
 
-  /**
-   * Track funnel event to database
-   */
   const trackFunnelEvent = useCallback(async (
     eventType: FunnelEventType,
     jobId: string,
-    employerId: string,
+    ownerId: string,
     filters?: Record<string, any>
   ) => {
     if (!hasAnalyticsConsent()) {
@@ -213,7 +178,8 @@ export function useAnalytics() {
     const eventData = {
       event_type: eventType,
       job_id: jobId,
-      employer_id: employerId,
+      employer_id: ownerId, // Keep for backwards compatibility
+      owner_id: ownerId,    // Add owner_id to match jobs table
       user_id: user?.id || null,
       session_id: getOrCreateSessionId(),
       referrer: document.referrer || null,
@@ -239,45 +205,42 @@ export function useAnalytics() {
     }
   }, [user]);
 
-  // Debounced tracking functions
   const trackImpression = useCallback(
-    debounce((jobId: string, employerId: string, filters?: Record<string, any>) => {
+    debounce((jobId: string, ownerId: string, filters?: Record<string, any>) => {
       if (trackedImpressionsRef.current.has(jobId)) return;
       trackedImpressionsRef.current.add(jobId);
-      trackFunnelEvent('impression', jobId, employerId, filters);
+      trackFunnelEvent('impression', jobId, ownerId, filters);
     }, 500),
     [trackFunnelEvent]
   );
 
-  const trackListClick = useCallback((jobId: string, employerId: string, filters?: Record<string, any>) => {
-    trackFunnelEvent('list_click', jobId, employerId, filters);
+  const trackListClick = useCallback((jobId: string, ownerId: string, filters?: Record<string, any>) => {
+    trackFunnelEvent('list_click', jobId, ownerId, filters);
   }, [trackFunnelEvent]);
 
-  const trackDetailView = useCallback((jobId: string, employerId: string) => {
-    // Delayed to ensure it's a real view, not just a quick bounce
+  const trackDetailView = useCallback((jobId: string, ownerId: string) => {
     setTimeout(() => {
-      trackFunnelEvent('detail_view', jobId, employerId);
+      trackFunnelEvent('detail_view', jobId, ownerId);
     }, 2000);
   }, [trackFunnelEvent]);
 
-  const trackApplyOpen = useCallback((jobId: string, employerId: string) => {
-    trackFunnelEvent('apply_open', jobId, employerId);
+  const trackApplyOpen = useCallback((jobId: string, ownerId: string) => {
+    trackFunnelEvent('apply_open', jobId, ownerId);
   }, [trackFunnelEvent]);
 
-  const trackApplySubmit = useCallback((jobId: string, employerId: string) => {
-    trackFunnelEvent('apply_submit', jobId, employerId);
+  const trackApplySubmit = useCallback((jobId: string, ownerId: string) => {
+    trackFunnelEvent('apply_submit', jobId, ownerId);
   }, [trackFunnelEvent]);
 
-  // Setup intersection observer for impressions
-  const observeJobCard = useCallback((element: HTMLElement, jobId: string, employerId: string, filters?: Record<string, any>) => {
+  const observeJobCard = useCallback((element: HTMLElement, jobId: string, ownerId: string, filters?: Record<string, any>) => {
     if (!impressionObserverRef.current) {
       impressionObserverRef.current = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
-              const { jobId, employerId, filters } = (entry.target as any).dataset;
-              if (jobId && employerId) {
-                trackImpression(jobId, employerId, filters ? JSON.parse(filters) : undefined);
+              const { jobId, ownerId, filters } = (entry.target as any).dataset;
+              if (jobId && ownerId) {
+                trackImpression(jobId, ownerId, filters ? JSON.parse(filters) : undefined);
               }
             }
           });
@@ -287,7 +250,7 @@ export function useAnalytics() {
     }
 
     element.dataset.jobId = jobId;
-    element.dataset.employerId = employerId;
+    element.dataset.ownerId = ownerId;
     if (filters) element.dataset.filters = JSON.stringify(filters);
     impressionObserverRef.current.observe(element);
 
@@ -296,9 +259,6 @@ export function useAnalytics() {
     };
   }, [trackImpression]);
 
-  /**
-   * Track page view (automatically tracked by Plausible for route changes)
-   */
   const trackPageView = useCallback((path?: string) => {
     if (!hasAnalyticsConsent()) return;
 
@@ -308,7 +268,6 @@ export function useAnalytics() {
     (window as any).plausible('pageview', { u: url });
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       impressionObserverRef.current?.disconnect();
@@ -319,7 +278,6 @@ export function useAnalytics() {
     trackEvent,
     trackPageView,
     hasConsent: hasAnalyticsConsent(),
-    // Funnel tracking methods
     trackImpression,
     trackListClick,
     trackDetailView,
@@ -329,10 +287,6 @@ export function useAnalytics() {
   };
 }
 
-/**
- * Standalone function to track events without the hook
- * Useful for one-off tracking in event handlers
- */
 export const trackAnalyticsEvent = (
   eventName: AnalyticsEvent,
   props?: AnalyticsEventProps
@@ -351,7 +305,6 @@ export const trackAnalyticsEvent = (
   }
 };
 
-// Declare plausible on window object for TypeScript
 declare global {
   interface Window {
     plausible?: (eventName: string, options?: { props?: any; u?: string }) => void;

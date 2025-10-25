@@ -75,11 +75,11 @@ export default function AnalyticsDashboard() {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysAgo);
 
-    // Build query
+    // Build query - use owner_id to match jobs table
     let query = supabase
       .from('analytics_events')
       .select('*')
-      .eq('employer_id', user?.id)
+      .or(`employer_id.eq.${user?.id},owner_id.eq.${user?.id}`) // Support both fields
       .gte('timestamp', startDate.toISOString());
 
     if (selectedJobId !== 'all') {

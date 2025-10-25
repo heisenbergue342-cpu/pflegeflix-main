@@ -41,10 +41,10 @@ export default function JobCard({ job, onSaveChange, priority = false, filters }
 
   // Track impression
   useEffect(() => {
-    if (cardRef.current && job.id && job.employer_id) {
-      return observeJobCard(cardRef.current, job.id, job.employer_id, filters);
+    if (cardRef.current && job.id && job.owner_id) {
+      return observeJobCard(cardRef.current, job.id, job.owner_id, filters);
     }
-  }, [job.id, job.employer_id, filters, observeJobCard]);
+  }, [job.id, job.owner_id, filters, observeJobCard]);
 
   const checkIfSaved = async () => {
     if (!user) return;
@@ -85,8 +85,8 @@ export default function JobCard({ job, onSaveChange, priority = false, filters }
   };
 
   const handleClick = () => {
-    if (job.id && job.employer_id) {
-      trackListClick(job.id, job.employer_id, filters);
+    if (job.id && job.owner_id) {
+      trackListClick(job.id, job.owner_id, filters);
     }
   };
 

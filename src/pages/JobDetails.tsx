@@ -44,10 +44,10 @@ export default function JobDetails() {
 
   // Track detail view (delayed)
   useEffect(() => {
-    if (job?.id && job?.employer_id) {
-      trackDetailView(job.id, job.employer_id);
+    if (job?.id && job?.owner_id) {
+      trackDetailView(job.id, job.owner_id);
     }
-  }, [job?.id, job?.employer_id, trackDetailView]);
+  }, [job?.id, job?.owner_id, trackDetailView]);
 
   const fetchJob = async () => {
     setLoading(true);
@@ -108,8 +108,8 @@ export default function JobDetails() {
   };
 
   const handleApplyOpen = () => {
-    if (!applyOpenTracked && job?.id && job?.employer_id) {
-      trackApplyOpen(job.id, job.employer_id);
+    if (!applyOpenTracked && job?.id && job?.owner_id) {
+      trackApplyOpen(job.id, job.owner_id);
       setApplyOpenTracked(true);
     }
   };
@@ -137,8 +137,8 @@ export default function JobDetails() {
       setCoverLetter('');
       
       // Track successful application
-      if (job?.id && job?.employer_id) {
-        trackApplySubmit(job.id, job.employer_id);
+      if (job?.id && job?.owner_id) {
+        trackApplySubmit(job.id, job.owner_id);
       }
       
       navigate('/applications');
