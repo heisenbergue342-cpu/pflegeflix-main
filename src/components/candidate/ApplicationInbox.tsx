@@ -15,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { de as deLocale, enUS as enLocale } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useUnreadMessagesCount } from "@/hooks/useUnreadMessagesCount";
+import { showDesktopNotification, getNotificationPermission, requestNotificationPermission, isNotificationSupported } from '@/hooks/useDesktopNotifications';
 
 interface Message {
   id: string;
@@ -44,7 +45,7 @@ interface Application {
 }
 
 export function ApplicationInbox() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const { language, t } = useLanguage();
   const [typingFromOther, setTypingFromOther] = useState(false);
@@ -73,18 +74,50 @@ export function ApplicationInbox() {
           schema: 'public',
           table: 'application_messages',
         },
-        (payload: any) => {
+        async (payload: any) => {
           const msg = payload?.new as Message | undefined;
           loadApplications();
           if (selectedApp) {
             loadMessages(selectedApp.id);
           }
           if (msg && msg.sender_id !== user?.id) {
-            // Toast: Neue Nachricht
+            const senderName = msg.profiles?.name || (language === 'de' ? 'Unbekannt' : 'Unknown');
+
+            // Toast info
             toast({
-              title: language === 'de' ? `Neue Nachricht von ${msg.profiles?.name || 'Unbekannt'}` : `New message from ${msg.profiles?.name || 'Unknown'}`,
+              title: language === 'de' ? `Neue Nachricht von ${senderName}` : `New message from ${senderName}`,
             });
-            // Auto-scroll nur im aktiven Thread
+
+            // Try desktop notification
+            let permission = getNotificationPermission();
+            if (isNotificationSupported() && permission === 'default') {
+              permission = await requestNotificationPermission();
+            }
+            const notified = showDesktopNotification({
+              title: language === 'de' ? 'Neue Nachricht' : 'New message',
+              body: msg.message?.slice(0, 120),
+              onClick: () => {
+                // focus Applications page and open thread
+                window.focus();
+              },
+            });
+
+            // Email fallback if notifications are denied or unsupported
+            if (!notified && (permission === 'denied' || !isNotificationSupported())) {
+              const toEmail = profile?.email || user?.email;
+              if (toEmail) {
+                // fire-and-forget; errors logged in function
+                supabase.functions.invoke('send-email-notification', {
+                  body: {
+                    to: toEmail,
+                    subject: language === 'de' ? 'Neue Nachricht in Pflegeflix' : 'New message in Pflegeflix',
+                    text: `${senderName}: ${String(msg.message || '').slice(0, 500)}`,
+                  },
+                });
+              }
+            }
+
+            // Auto-scroll only if thread matches
             if (selectedApp && msg.application_id === selectedApp.id) {
               setTimeout(() => {
                 messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
