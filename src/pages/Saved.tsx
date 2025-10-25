@@ -21,10 +21,10 @@ export default function Saved() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [compareStartCity, setCompareStartCity] = useState<string | undefined>(searchParams.get('start') || undefined);
   const [compareMode, setCompareMode] = useState<any>((searchParams.get('mode') as 'car' | 'transit') || 'car');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) fetchSavedJobs();
-    // Initialize compare ids from URL
     const compareIds = (searchParams.get('compare') || '')
       .split(',')
       .map((id) => id.trim())
@@ -34,7 +34,6 @@ export default function Saved() {
   }, [user]);
 
   useEffect(() => {
-    // Persist compare selections and commute settings in URL
     const params = new URLSearchParams(searchParams);
     if (selectedCompareIds.length > 0) {
       params.set('compare', selectedCompareIds.join(','));
@@ -49,29 +48,75 @@ export default function Saved() {
   }, [selectedCompareIds, compareStartCity, compareMode]);
 
   const fetchSavedJobs = async () => {
-    const { data } = await supabase
-      .from('saved_jobs')
-      .select('job_id, notes, jobs(*)')
-      .eq('user_id', user?.id);
-    const j = data?.map(d => d.jobs) || [];
-    setJobs(j);
-    const n: Record<string, string | null> = {};
-    (data || []).forEach((row: any) => {
-      n[row.job_id] = row.notes ?? null;
-    });
-    setNotesMap(n);
+    setLoading(true);
+    try {
+      // Erst saved_jobs holen
+      const { data: savedData, error: savedError } = await supabase
+        .from('saved_jobs')
+        .select('job_id, notes')
+        .eq('user_id', user?.id);
+
+      if (savedError) {
+        console.error('Error fetching saved jobs:', savedError);
+        setLoading(false);
+        return;
+      }
+
+      if (!savedData || savedData.length === 0) {
+        setJobs([]);
+        setNotesMap({});
+        setLoading(false);
+        return;
+      }
+
+      // Job IDs extrahieren
+      const jobIds = savedData.map(s => s.job_id);
+
+      // Jobs separat laden
+      const { data: jobsData, error: jobsError } = await supabase
+        .from('jobs')
+        .select('*')
+        .in('id', jobIds);
+
+      if (jobsError) {
+        console.error('Error fetching jobs:', jobsError);
+        setLoading(false);
+        return;
+      }
+
+      setJobs(jobsData || []);
+
+      // Notizen-Map erstellen
+      const n: Record<string, string | null> = {};
+      savedData.forEach((row: any) => {
+        n[row.job_id] = row.notes ?? null;
+      });
+      setNotesMap(n);
+    } catch (error) {
+      console.error('Error in fetchSavedJobs:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleCompare = (jobId: string) => {
     setSelectedCompareIds((prev) => {
       const exists = prev.includes(jobId);
       let next = exists ? prev.filter((id) => id !== jobId) : [...prev, jobId];
-      if (next.length > 3) next = next.slice(1); // keep max 3 (drop oldest)
+      if (next.length > 3) next = next.slice(1);
       return next;
     });
   };
 
   const isSelected = (jobId: string) => selectedCompareIds.includes(jobId);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-netflix-bg flex items-center justify-center">
+        <div className="text-white text-xl">{t('common.loading')}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-netflix-bg">
@@ -109,7 +154,7 @@ export default function Saved() {
                 </button>
               </div>
 
-              <JobCard key={job.id} job={job} onSaveChange={fetchSavedJobs} />
+              <JobCard job={job} onSaveChange={fetchSavedJobs} />
 
               <SavedJobNotes
                 jobId={job.id}
@@ -139,7 +184,6 @@ export default function Saved() {
           </div>
         )}
 
-        {/* Compare panel */}
         {selectedCompareIds.length > 0 ? (
           <ComparePanel
             jobs={jobs}
