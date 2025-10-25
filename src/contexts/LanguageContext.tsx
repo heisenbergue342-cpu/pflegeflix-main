@@ -1173,6 +1173,14 @@ export const translations: Record<Language, Record<string, string>> = {
     'favorites.removed': 'Job removed from favorites',
     'favorites.saved': 'Job saved',
     'favorites.description': 'Manage the jobs you saved for later',
+    'favorites.private_notes': 'Private Notizen',
+    'favorites.save_note': 'Notiz speichern',
+    'favorites.note_saved': 'Notiz gespeichert',
+    'favorites.compare': 'Vergleichen',
+    'favorites.compare_selected': 'Vergleich anzeigen',
+    'favorites.compare_panel_title': 'Vergleich',
+    'favorites.compare_clear': 'Auswahl löschen',
+    'favorites.compare_add_hint': 'Wähle bis zu 3 Jobs zum Vergleich aus.',
 
     // Footer
     'footer.company_info': 'Company Information',
