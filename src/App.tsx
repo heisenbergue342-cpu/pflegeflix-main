@@ -75,7 +75,8 @@ const App = () => (
                 <Route path="/" element={<Home />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/not-authorized" element={<NotAuthorized />} />
-                <Route path="/job/:id" element={<JobDetails />} />
+                <Route path="/jobs/:id" element={<JobDetails />} />
+                <Route path="/job/:id" element={<Navigate replace to="/jobs/:id" />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/saved" element={<Saved />} />
                 <Route path="/saved-searches" element={<SavedSearches />} />

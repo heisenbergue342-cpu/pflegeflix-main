@@ -27,6 +27,11 @@ export default function JobDetails() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    // Scroll to top on navigation to a new job
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [id]);
+
+  useEffect(() => {
     if (id) {
       fetchJob();
       if (user) {
@@ -189,7 +194,7 @@ export default function JobDetails() {
       <SEO 
         title={`${job.title} in ${job.city}, ${job.state}`}
         description={`${job.title} ${t('job.at_facility')} ${job.facility_type || t('job.default_facility')} ${t('search.location')} ${job.city}. ${job.contract_type} | ${job.salary_min && job.salary_max ? `€${job.salary_min}-${job.salary_max}${job.salary_unit}` : t('job.competitive_salary')}. ${job.description?.substring(0, 100) || t('job.apply_now_description')}`}
-        canonical={`/job/${id}`}
+        canonical={`/jobs/${id}`}
         ogType="article"
       />
       
