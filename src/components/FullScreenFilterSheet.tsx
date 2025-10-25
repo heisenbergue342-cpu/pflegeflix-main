@@ -12,6 +12,7 @@ import { trackAnalyticsEvent } from '@/hooks/useAnalytics';
 import { supabase } from '@/integrations/supabase/client';
 import { germanCities, City } from '@/data/cities_de';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { estimateCommuteFromCities, CommuteMode } from "@/utils/commute";
 
 interface FilterState {
   cities: string[];
@@ -23,6 +24,9 @@ interface FilterState {
   salaryMin?: number;
   salaryMax?: number;
   shiftTypes: string[];
+  commuteStart?: string;
+  commuteMaxMinutes?: number;
+  commuteMode?: CommuteMode;
 }
 
 interface Props {
@@ -36,6 +40,7 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
   const { t } = useLanguage();
   const [localFilters, setLocalFilters] = useState<FilterState>(filters);
   const [citySearch, setCitySearch] = useState('');
+  const [commuteCitySearch, setCommuteCitySearch] = useState('');
   const [jobCount, setJobCount] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef<number>(0);
@@ -124,6 +129,16 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
       .slice(0, 8);
   }, [citySearch, localFilters.cities]);
 
+  // NEW: suggestions for commute start
+  const filteredCommuteCities = useMemo(() => {
+    if (!commuteCitySearch) return [];
+    return germanCities
+      .filter(city =>
+        city.name.toLowerCase().includes(commuteCitySearch.toLowerCase())
+      )
+      .slice(0, 8);
+  }, [commuteCitySearch]);
+
   const handleReset = () => {
     setLocalFilters({
       cities: [],
@@ -134,8 +149,12 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
       salaryMin: undefined,
       salaryMax: undefined,
       shiftTypes: [],
+      commuteStart: undefined,
+      commuteMaxMinutes: undefined,
+      commuteMode: undefined,
     });
     setCitySearch('');
+    setCommuteCitySearch('');
   };
 
   const handleApply = () => {
@@ -352,6 +371,76 @@ export function FullScreenFilterSheet({ open, onOpenChange, filters, onApplyFilt
                     onClick={() => toggleArrayFilter('shiftTypes', type)}
                   />
                 ))}
+              </div>
+            </section>
+
+            {/* NEW: Commute time */}
+            <section aria-labelledby="commute-heading">
+              <h3 id="commute-heading" className="text-lg font-bold mb-3">{t('search.commute.title')}</h3>
+              <div className="space-y-3">
+                <Input
+                  placeholder={t('search.commute.start')}
+                  value={commuteCitySearch}
+                  onChange={(e) => setCommuteCitySearch(e.target.value)}
+                  className="bg-[#1A1A1B] border-[#2A2A2B] text-white placeholder:text-[#666]"
+                  aria-label={t('search.commute.start')}
+                />
+                {filteredCommuteCities.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {filteredCommuteCities.map(city => (
+                      <PillChip
+                        key={city.name}
+                        label={city.name}
+                        onClick={() => {
+                          setLocalFilters(prev => ({ ...prev, commuteStart: city.name }));
+                          setCommuteCitySearch(city.name);
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+                {localFilters.commuteStart && (
+                  <div className="flex flex-wrap gap-3">
+                    <PillChip
+                      label={`${t('search.commute.start')}: ${localFilters.commuteStart}`}
+                      selected
+                      onClick={() => setLocalFilters(prev => ({ ...prev, commuteStart: undefined }))}
+                    />
+                  </div>
+                )}
+
+                {/* Mode selection */}
+                <div className="pt-2">
+                  <p className="text-sm mb-2 text-[#999]">{t('search.commute.mode')}</p>
+                  <div className="flex flex-wrap gap-3">
+                    {[
+                      { label: t('search.commute.by_car'), val: 'car' as CommuteMode },
+                      { label: t('search.commute.by_transit'), val: 'transit' as CommuteMode },
+                    ].map(opt => (
+                      <PillChip
+                        key={opt.val}
+                        label={opt.label}
+                        selected={(localFilters.commuteMode || 'car') === opt.val}
+                        onClick={() => setLocalFilters(prev => ({ ...prev, commuteMode: opt.val }))}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Max time */}
+                <div className="pt-2">
+                  <p className="text-sm mb-2 text-[#999]">{t('search.commute.max_time_label')}</p>
+                  <div className="flex flex-wrap gap-3">
+                    {[15, 30, 45, 60].map(min => (
+                      <PillChip
+                        key={min}
+                        label={`${min} ${t('search.commute.minutes_short')}`}
+                        selected={localFilters.commuteMaxMinutes === min}
+                        onClick={() => setLocalFilters(prev => ({ ...prev, commuteMaxMinutes: min }))}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
 

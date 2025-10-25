@@ -14,6 +14,7 @@ import SEO from '@/components/SEO';
 import { BreadcrumbStructuredData } from '@/components/StructuredData';
 import { SaveSearchDialog } from '@/components/SaveSearchDialog';
 import { PostedFilterToggle } from '@/components/PostedFilterToggle';
+import { estimateCommuteFromCities, CommuteMode } from "@/utils/commute";
 
 interface FilterState {
   cities: string[];
@@ -25,6 +26,9 @@ interface FilterState {
   salaryMin?: number;
   salaryMax?: number;
   shiftTypes: string[];
+  commuteStart?: string;
+  commuteMaxMinutes?: number;
+  commuteMode?: CommuteMode;
 }
 
 export default function Search() {
@@ -50,6 +54,9 @@ export default function Search() {
     salaryMin: undefined,
     salaryMax: undefined,
     shiftTypes: [],
+    commuteStart: undefined,
+    commuteMaxMinutes: undefined,
+    commuteMode: undefined,
   });
 
   // Auto-focus search input when navigating from Suche button
@@ -88,6 +95,9 @@ export default function Search() {
       salaryMin: searchParams.get('salaryMin') ? parseInt(searchParams.get('salaryMin')!) : undefined,
       salaryMax: searchParams.get('salaryMax') ? parseInt(searchParams.get('salaryMax')!) : undefined,
       shiftTypes: searchParams.get('shiftTypes')?.split(',').filter(Boolean) || [],
+      commuteStart: searchParams.get('commuteStart') || undefined,
+      commuteMaxMinutes: searchParams.get('commuteMax') ? parseInt(searchParams.get('commuteMax')!) : undefined,
+      commuteMode: (searchParams.get('commuteMode') as CommuteMode) || undefined,
     };
     setFilters(newFilters);
   }, [searchParams, setSearchParams]);
@@ -143,7 +153,28 @@ export default function Search() {
     }
 
     const { data } = await query;
-    setJobs(data || []);
+    let rawJobs = data || [];
+
+    // Compute commute minutes per job if commute filter active
+    const hasCommute = !!filters.commuteStart && !!filters.commuteMaxMinutes;
+    const mode: CommuteMode = filters.commuteMode || "car";
+
+    const computed = rawJobs.map((job: any) => {
+      const commuteMinutes = filters.commuteStart
+        ? estimateCommuteFromCities(filters.commuteStart, job.city, mode)
+        : null;
+      return { ...job, commuteMinutes };
+    });
+
+    // Filter by max commute if set
+    let result = computed;
+    if (hasCommute) {
+      result = result.filter((j: any) => typeof j.commuteMinutes === 'number' && j.commuteMinutes <= (filters.commuteMaxMinutes as number));
+      // Sort by shortest commute when active
+      result.sort((a: any, b: any) => (a.commuteMinutes as number) - (b.commuteMinutes as number));
+    }
+
+    setJobs(result);
   };
 
   // Save scroll position before opening filter
@@ -176,7 +207,10 @@ export default function Search() {
     if (newFilters.salaryMin) params.set('salaryMin', newFilters.salaryMin.toString());
     if (newFilters.salaryMax) params.set('salaryMax', newFilters.salaryMax.toString());
     if (newFilters.shiftTypes.length > 0) params.set('shiftTypes', newFilters.shiftTypes.join(','));
-    
+    if (newFilters.commuteStart) params.set('commuteStart', newFilters.commuteStart);
+    if (newFilters.commuteMaxMinutes) params.set('commuteMax', String(newFilters.commuteMaxMinutes));
+    if (newFilters.commuteMode) params.set('commuteMode', newFilters.commuteMode);
+
     setSearchParams(params);
     
     // Track analytics event (consent-aware)
@@ -184,6 +218,9 @@ export default function Search() {
       const payload: any = { activeFilters: activeFilterCount + 0 };
       if (newFilters.facilities.includes('Ambulante Pflege')) {
         payload.category = 'ambulant';
+      }
+      if (newFilters.commuteStart && newFilters.commuteMaxMinutes) {
+        payload.commute = `${newFilters.commuteStart}<=${newFilters.commuteMaxMinutes}min`;
       }
       trackAnalyticsEvent('filter_applied', payload);
     });
@@ -214,7 +251,9 @@ export default function Search() {
     filters.shiftTypes.length +
     (filters.posted ? 1 : 0) +
     (filters.salaryMin ? 1 : 0) +
-    (filters.salaryMax ? 1 : 0);
+    (filters.salaryMax ? 1 : 0) +
+    (filters.commuteStart ? 1 : 0) +
+    (filters.commuteMaxMinutes ? 1 : 0);
 
   // Generate dynamic SEO title and description
   const seoTitle = useMemo(() => {
@@ -372,6 +411,30 @@ export default function Search() {
               <Badge variant="secondary" className="gap-1 pr-1">
                 {t(`search.posted_options.${filters.posted}`)}
                 <button onClick={() => removeFilter('posted')} className="ml-1 hover:bg-primary/20 rounded-full p-0.5" aria-label={t('search.remove_filter', { filter: t('search.posted_label') })}>
+                  <X className="w-3 h-3" aria-hidden="true" />
+                </button>
+              </Badge>
+            )}
+            {filters.commuteStart && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {t('search.commute.start')}: {filters.commuteStart}
+                <button
+                  onClick={() => removeFilter('commuteStart')}
+                  className="ml-1 hover:bg-primary/20 rounded-full p-0.5"
+                  aria-label={t('search.remove_filter', { filter: t('search.commute.start') })}
+                >
+                  <X className="w-3 h-3" aria-hidden="true" />
+                </button>
+              </Badge>
+            )}
+            {filters.commuteMaxMinutes && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {t('search.commute.max_time_label')}: {filters.commuteMaxMinutes} {t('search.commute.minutes_short')}
+                <button
+                  onClick={() => removeFilter('commuteMaxMinutes')}
+                  className="ml-1 hover:bg-primary/20 rounded-full p-0.5"
+                  aria-label={t('search.remove_filter', { filter: t('search.commute.max_time_label') })}
+                >
                   <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </Badge>

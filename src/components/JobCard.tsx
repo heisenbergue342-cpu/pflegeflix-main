@@ -78,11 +78,7 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
   const daysAgo = Math.floor((new Date().getTime() - new Date(job.posted_at).getTime()) / (1000 * 60 * 60 * 24));
 
   return (
-    <Link 
-      to={`/job/${job.id}`} 
-      className="group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--focus-outline))] focus-visible:ring-offset-2 rounded-md inline-block"
-      aria-label={t('job.view_details_for', { title: job.title, city: job.city, state: job.state })}
-    >
+    <div className="bg-netflix-card rounded-lg shadow-sm p-4">
       <div 
         className="relative bg-netflix-card rounded-md overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-netflix-red/20 min-w-[280px]"
         style={{ 
@@ -147,8 +143,15 @@ export default function JobCard({ job, onSaveChange, priority = false }: JobCard
             {job.contract_type}{job.shift_type ? ` • ${job.shift_type}` : ''}
           </div>
         </div>
+
+        {/* NEW: Commute time display */}
+        {typeof job.commuteMinutes === 'number' && (
+          <div className="mt-2 text-sm text-netflix-text-muted">
+            {t('search.commute.estimated')}: {job.commuteMinutes} {t('search.commute.minutes_short')} ({(job.commuteMode || 'car') === 'car' ? t('search.commute.by_car') : t('search.commute.by_transit')})
+          </div>
+        )}
       </div>
       <LoginPromptModal open={showLoginPrompt} onOpenChange={setShowLoginPrompt} />
-    </Link>
+    </div>
   );
 }
