@@ -304,14 +304,14 @@ export function ApplicationInbox() {
   return (
     <div className="grid md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
       {/* Applications List */}
-      <Card className="bg-card border-border overflow-visible">
+      <Card className="bg-card border-border overflow-hidden">
         <div className="p-4 border-b border-border">
-          <div className="flex flex-wrap items-center justify-between gap-2 overflow-visible">
-            <h3 className="font-semibold text-foreground flex items-center gap-2 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
               <Mail className="h-5 w-5" />
               {t('application.inbox_title')}
             </h3>
-            <div className="flex items-center gap-3 ms-auto z-10 min-w-0 w-full lg:w-auto">
+            <div className="flex items-center gap-3">
               <Tabs value={filterTab} onValueChange={(v: any) => setFilterTab(v)}>
                 <TabsList className="bg-muted">
                   <TabsTrigger value="all">{t('applicants.all') || 'Alle'}</TabsTrigger>
@@ -319,7 +319,7 @@ export function ApplicationInbox() {
                 </TabsList>
               </Tabs>
               <Select value={jobFilter} onValueChange={(v) => setJobFilter(v)}>
-                <SelectTrigger className="w-full lg:w-[160px]" aria-label={t('applicants.filter_job')}>
+                <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder={t('applicants.filter_job')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -380,7 +380,7 @@ export function ApplicationInbox() {
       </Card>
 
       {/* Messages */}
-      <Card className="md:col-span-2 bg-card border-border overflow-visible flex flex-col">
+      <Card className="md:col-span-2 bg-card border-border overflow-hidden flex flex-col">
         {selectedApp ? (
           <>
             <div className="p-4 border-b border-border">
